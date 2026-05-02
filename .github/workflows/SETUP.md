@@ -2,9 +2,9 @@
 
 ## Required Secrets
 
-Vào **Settings → Secrets and variables → Actions** trong GitHub repo và thêm 2 secrets:
+Vào **Settings → Secrets and variables → Actions** trong GitHub repo và thêm **1 secret** duy nhất:
 
-### 1. `FIREBASE_SERVICE_ACCOUNT_KEOLAI_63EC1`
+### `FIREBASE_SERVICE_ACCOUNT_KEOLAI_63EC1`
 
 Lấy từ GCP Console:
 
@@ -27,25 +27,18 @@ cat firebase-ci-key.json
 >   --role=roles/firebase.admin
 > ```
 
-### 2. `FIREBASE_CI_TOKEN`
-
-Dùng để deploy Functions (vì `action-hosting-deploy` chỉ deploy Hosting):
-
-```bash
-# Chạy lệnh này local, paste token vào secret
-firebase login:ci
-```
-
 ## Workflow Flow
 
 ```
 Push to main
-    → Build Next.js (static export)
-    → Install Functions dependencies  
-    → Deploy Hosting via action-hosting-deploy
-    → Deploy Functions via firebase-tools
+    → Authenticate GCP via google-github-actions/auth (service account)
+    → Install Next.js dependencies + build (static export)
+    → Install Functions dependencies
+    → Install firebase-tools
+    → Deploy Hosting via firebase deploy
+    → Deploy Functions via firebase deploy
 ```
 
 ## Manual Trigger
 
-Có thể trigger thủ công từ GitHub Actions tab → "Deploy KeoLai to Firebase" → "Run workflow".
+Vào GitHub → Actions tab → "Deploy KeoLai to Firebase" → "Run workflow".
