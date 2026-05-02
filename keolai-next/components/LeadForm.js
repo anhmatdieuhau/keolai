@@ -192,7 +192,7 @@ export default function LeadForm() {
               </div>
               <div className="form-group">
                 <label htmlFor="leadPhone">SỐ ĐIỆN THOẠI (ZALO)</label>
-                <input type="tel" id="leadPhone" name="phone" placeholder="0xxx xxx xxx" required autoComplete="tel" pattern="[0-9]{9,11}" />
+                <input type="tel" id="leadPhone" name="phone" placeholder="0xxx xxx xxx" required autoComplete="tel" pattern="[0-9]{9,11}" inputMode="numeric" />
                 <span className="field-hint">Bảo mật — chỉ dùng để tư vấn</span>
               </div>
               
@@ -214,23 +214,69 @@ export default function LeadForm() {
                       <input type="text" id="leadProvince" name="province" placeholder="Quang Nam" autoComplete="address-level1" list="provinceList" />
                       <span className="field-hint">Để tính cước vận chuyển</span>
                       <datalist id="provinceList">
-                        <option value="Hồ Chí Minh" />
                         <option value="Hà Nội" />
+                        <option value="Hồ Chí Minh" />
                         <option value="Đà Nẵng" />
-                        <option value="Đồng Nai" />
-                        <option value="Bình Dương" />
-                        <option value="Bình Phước" />
-                        <option value="Tây Ninh" />
+                        <option value="Hải Phòng" />
+                        <option value="Cần Thơ" />
+                        <option value="An Giang" />
                         <option value="Bà Rịa - Vũng Tàu" />
-                        <option value="Lâm Đồng" />
+                        <option value="Bạc Liêu" />
+                        <option value="Bắc Giang" />
+                        <option value="Bắc Kạn" />
+                        <option value="Bắc Ninh" />
+                        <option value="Bến Tre" />
+                        <option value="Bình Dương" />
+                        <option value="Bình Định" />
+                        <option value="Bình Phước" />
+                        <option value="Bình Thuận" />
+                        <option value="Cà Mau" />
+                        <option value="Cao Bằng" />
                         <option value="Đắk Lắk" />
                         <option value="Đắk Nông" />
+                        <option value="Điện Biên" />
+                        <option value="Đồng Nai" />
+                        <option value="Đồng Tháp" />
                         <option value="Gia Lai" />
+                        <option value="Hà Giang" />
+                        <option value="Hà Nam" />
+                        <option value="Hà Tĩnh" />
+                        <option value="Hải Dương" />
+                        <option value="Hậu Giang" />
+                        <option value="Hòa Bình" />
+                        <option value="Hưng Yên" />
+                        <option value="Khánh Hòa" />
+                        <option value="Kiên Giang" />
                         <option value="Kon Tum" />
+                        <option value="Lai Châu" />
+                        <option value="Lâm Đồng" />
+                        <option value="Lạng Sơn" />
+                        <option value="Lào Cai" />
+                        <option value="Long An" />
+                        <option value="Nam Định" />
+                        <option value="Nghệ An" />
+                        <option value="Ninh Bình" />
+                        <option value="Ninh Thuận" />
+                        <option value="Phú Thọ" />
                         <option value="Phú Yên" />
-                        <option value="Bình Định" />
-                        <option value="Quảng Ngãi" />
+                        <option value="Quảng Bình" />
                         <option value="Quảng Nam" />
+                        <option value="Quảng Ngãi" />
+                        <option value="Quảng Ninh" />
+                        <option value="Quảng Trị" />
+                        <option value="Sóc Trăng" />
+                        <option value="Sơn La" />
+                        <option value="Tây Ninh" />
+                        <option value="Thái Bình" />
+                        <option value="Thái Nguyên" />
+                        <option value="Thanh Hóa" />
+                        <option value="Thừa Thiên Huế" />
+                        <option value="Tiền Giang" />
+                        <option value="Trà Vinh" />
+                        <option value="Tuyên Quang" />
+                        <option value="Vĩnh Long" />
+                        <option value="Vĩnh Phúc" />
+                        <option value="Yên Bái" />
                       </datalist>
                     </div>
                   </div>

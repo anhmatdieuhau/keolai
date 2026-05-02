@@ -64,6 +64,69 @@ function LoginScreen() {
   )
 }
 
+// ─── Dashboard Screen ───
+function DashboardScreen() {
+  const [articles, setArticles] = useState([])
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchArticles = async () => {
+      try {
+        const res = await fetch(`${CMS_API}/listArticles`)
+        if (res.ok) {
+          const data = await res.json()
+          // Fetch analytics for each article
+          const articlesWithAnalytics = await Promise.all(data.articles.map(async (art) => {
+            try {
+              const anRes = await fetch(`${CMS_API}/contentAnalytics?slug=${art.slug}`)
+              if (anRes.ok) {
+                const anData = await anRes.json()
+                return { ...art, analytics: anData }
+              }
+            } catch (e) { console.error(e) }
+            return { ...art, analytics: { views: 0, leads: 0, conversionRate: '0%' } }
+          }))
+          setArticles(articlesWithAnalytics)
+        }
+      } catch (err) {
+        console.error('Failed to load articles', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchArticles()
+  }, [])
+
+  if (loading) return <div className="cms-dashboard"><div className="cms-spinner" /></div>
+
+  return (
+    <div className="cms-dashboard" style={{ padding: '24px', overflowY: 'auto', flex: 1 }}>
+      <h2>Thống Kê Bài Viết</h2>
+      <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '16px', background: 'white', borderRadius: '8px', overflow: 'hidden' }}>
+        <thead style={{ background: '#f8fafc', textAlign: 'left' }}>
+          <tr>
+            <th style={{ padding: '12px' }}>Tiêu đề</th>
+            <th style={{ padding: '12px' }}>Lượt xem</th>
+            <th style={{ padding: '12px' }}>Leads (Đăng ký)</th>
+            <th style={{ padding: '12px' }}>Tỷ lệ chuyển đổi</th>
+          </tr>
+        </thead>
+        <tbody>
+          {articles.map(art => (
+            <tr key={art.slug} style={{ borderTop: '1px solid #e2e8f0' }}>
+              <td style={{ padding: '12px' }}><a href={art.url} target="_blank" rel="noopener noreferrer" style={{ color: '#0f5238', textDecoration: 'none', fontWeight: '500' }}>{art.title}</a></td>
+              <td style={{ padding: '12px' }}>{art.analytics?.views || 0}</td>
+              <td style={{ padding: '12px' }}>{art.analytics?.leads || 0}</td>
+              <td style={{ padding: '12px' }}>{art.analytics?.conversionRate || '0%'}</td>
+            </tr>
+          ))}
+          {articles.length === 0 && <tr><td colSpan="4" style={{ padding: '24px', textAlign: 'center', color: '#64748b' }}>Chưa có bài viết nào.</td></tr>}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
 // ─── Chat Screen ───
 function ChatScreen({ user }) {
   const [messages, setMessages] = useState([])
@@ -164,15 +227,7 @@ function ChatScreen({ user }) {
 
   return (
     <>
-      {/* Top Bar */}
-      <div className="cms-topbar">
-        <div className="cms-topbar-logo">
-          <span>KL</span> KeoLai CMS
-        </div>
-        <button className="cms-icon-btn" onClick={() => auth && signOut(auth)} title="Đăng xuất">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
-        </button>
-      </div>
+      {/* Top Bar is handled in Main Page */}
 
       {/* Chat */}
       <div className="cms-chat" ref={el => chatRef.current = el}>
@@ -276,6 +331,7 @@ function ChatScreen({ user }) {
 export default function CMSPage() {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [view, setView] = useState('chat') // 'chat' or 'dashboard'
 
   useEffect(() => {
     if (!auth) { setLoading(false); return }
@@ -284,9 +340,21 @@ export default function CMSPage() {
 
   if (loading) return <div className="cms-app"><div className="cms-login"><div className="cms-spinner" /></div></div>
 
+  if (!user) return <div className="cms-app"><LoginScreen /></div>
+
   return (
-    <div className="cms-app">
-      {user ? <ChatScreen user={user} /> : <LoginScreen />}
+    <div className="cms-app" style={{ display: 'flex', flexDirection: 'column', height: '100vh' }}>
+      <div className="cms-topbar" style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 24px', background: 'white', borderBottom: '1px solid #e2e8f0' }}>
+        <div className="cms-topbar-logo" style={{ fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <span style={{ background: '#0f5238', color: 'white', padding: '4px 8px', borderRadius: '4px' }}>KL</span> KeoLai CMS
+        </div>
+        <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+          <button onClick={() => setView('chat')} style={{ padding: '6px 12px', border: 'none', background: view === 'chat' ? '#e2e8f0' : 'transparent', borderRadius: '6px', cursor: 'pointer' }}>Viết Bài</button>
+          <button onClick={() => setView('dashboard')} style={{ padding: '6px 12px', border: 'none', background: view === 'dashboard' ? '#e2e8f0' : 'transparent', borderRadius: '6px', cursor: 'pointer' }}>Thống Kê</button>
+          <button onClick={() => signOut(auth)} style={{ padding: '6px 12px', border: '1px solid #e2e8f0', background: 'white', borderRadius: '6px', cursor: 'pointer' }}>Đăng xuất</button>
+        </div>
+      </div>
+      {view === 'chat' ? <ChatScreen user={user} /> : <DashboardScreen />}
     </div>
   )
 }

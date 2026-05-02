@@ -268,6 +268,8 @@ export default function Home() {
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwxA2cwtcgxA_DP_CY6raj4OrSSkxf1at_Jtykqx1e8qxC48oiibz1wy8vVMnUFnITKgipdpu1XF9BjkFb6uPcS1MJv55XwrfcCjrzZExYO3ezBZhhttXxtD3oV61-4AcLcnb1yAIpRko-P2DzMxe3M8fz5o1_20z_VVBT400_2rAaJlxRx3PMl6gql3j1IHwgL7EPYNLz4WGjnEXZPqH1Cmq02Bo-d6VIjLY1bKH2GU4CkYQqtKiSTErETUfZ8552HpmdZERTejA"
             alt="Vườn keo lai giâm hom quy mô lớn"
             loading="eager"
+            fetchPriority="high"
+            decoding="sync"
           />
           <div className="hero-overlay" />
         </div>
@@ -443,40 +445,54 @@ export default function Home() {
             <div style={{ textAlign: "center", marginBottom: "40px" }}>
               <h2 className="section-title" style={{ marginBottom: "16px" }}>Khách hàng thực tế nói gì</h2>
               <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#f0fdf4", color: "#166534", padding: "8px 16px", borderRadius: "100px", fontWeight: "600", fontSize: "14px" }}>
-                <span>🏅</span> Đã giao hơn 2.5 triệu cây trong năm 2026
+                <span>🏅</span> Đã giao hơn 500.000 cây trong năm 2026
               </div>
             </div>
             <div className="testimonial-grid">
               {[
                 {
-                  text: 'Tôi đã nhập 10 vạn cây AH1 của vườn. Cây rất khoẻ, đồng đều, tỷ lệ hao hụt sau khi trồng thực tế cực thấp. Rất hài lòng với dịch vụ.',
-                  name: "ANH HÙNG",
-                  loc: "QUẢNG NGÃI",
+                  quote: 'Tôi đã nhập 10 vạn cây AH1 của vườn. Cây rất khoẻ, đồng đều, tỷ lệ hao hụt sau khi trồng thực tế cực thấp. Rất hài lòng với dịch vụ.',
+                  name: "ANH NGUYỄN VĂN HÙNG",
+                  location: "QUẢNG NGÃI",
+                  amount: "10 vạn",
+                  years: "2023",
+                  avatar: "/images/testimonials/avatar-placeholder.svg",
                   border: "border-primary",
                 },
                 {
-                  text: 'Vườn ươm làm việc rất chuyên nghiệp, giao hàng đúng hẹn dù đường vào rẫy khó đi. Cây hom đạt tiêu chuẩn, rễ khoẻ.',
-                  name: "CHỊ MAI",
-                  loc: "BÌNH ĐỊNH",
+                  quote: 'Vườn ươm làm việc rất chuyên nghiệp, giao hàng đúng hẹn dù đường vào rẫy khó đi. Cây hom đạt tiêu chuẩn, rễ khoẻ.',
+                  name: "CHỊ TRẦN THỊ MAI",
+                  location: "BÌNH ĐỊNH",
+                  amount: "5 vạn",
+                  years: "2024",
+                  avatar: "/images/testimonials/avatar-placeholder.svg",
                   border: "border-secondary",
                 },
                 {
-                  text: 'Giá cả cạnh tranh nhất khu vực Miền Trung. Tư vấn kỹ thuật trồng rừng rất tận tâm, không chỉ bán cây mà còn hỗ trợ quy trình.',
-                  name: "ANH TUẤN",
-                  loc: "PHÚ YÊN",
+                  quote: 'Giá cả cạnh tranh nhất khu vực Miền Trung. Tư vấn kỹ thuật trồng rừng rất tận tâm, không chỉ bán cây mà còn hỗ trợ quy trình.',
+                  name: "ANH LÊ VĂN TUẤN",
+                  location: "PHÚ YÊN",
+                  amount: "8 vạn",
+                  years: "2025",
+                  avatar: "/images/testimonials/avatar-placeholder.svg",
                   border: "border-tertiary",
                 },
               ].map((t, i) => (
                 <ScrollReveal key={i} delay={i * 120}>
                   <div className={`testimonial-card ${t.border}`}>
-                    <span className="testimonial-quote-icon">&ldquo;</span>
+                    <div className="testimonial-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+                      <img src={t.avatar} alt={t.name} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
+                      <div className="testimonial-author-info">
+                        <span className="author-name" style={{ display: 'block', fontWeight: 'bold' }}>{t.name}</span>
+                        <span className="author-location" style={{ fontSize: '12px', color: '#666' }}>📍 {t.location}</span>
+                      </div>
+                    </div>
                     <div className="testimonial-stars">
                       {[...Array(5)].map((_, s) => <span key={s} className="testimonial-star">★</span>)}
                     </div>
-                    <p className="testimonial-text">{t.text}</p>
-                    <div className="testimonial-author">
-                      <span className="author-name">{t.name}</span>
-                      <span className="author-location">{t.loc}</span>
+                    <p className="testimonial-text">&ldquo;{t.quote}&rdquo;</p>
+                    <div className="testimonial-meta" style={{ marginTop: '12px', fontSize: '12px', color: '#166534', background: '#f0fdf4', padding: '6px 10px', borderRadius: '6px', display: 'inline-block' }}>
+                      📦 Đã mua: <strong>{t.amount} cây</strong> · 🤝 Khách từ {t.years}
                     </div>
                   </div>
                 </ScrollReveal>

@@ -35,11 +35,15 @@ export default function ExitPopup() {
     e.preventDefault();
     setStatus("loading");
 
+    let utmData = {};
+    try { utmData = JSON.parse(sessionStorage.getItem("utm_data") || "{}"); } catch { /* ignore */ }
+
     const fd = new FormData(e.target);
     const body = {
       name: fd.get("name"),
       phone: fd.get("phone"),
       source: "exit_popup",
+      utm: utmData,
     };
 
     try {
@@ -89,7 +93,7 @@ export default function ExitPopup() {
         
         <form ref={formRef} onSubmit={handleSubmit} className="exit-popup-form">
           <input type="text" name="name" placeholder="Họ và tên" required />
-          <input type="tel" name="phone" placeholder="Số điện thoại (Zalo)" pattern="[0-9]{9,11}" required />
+          <input type="tel" name="phone" placeholder="Số điện thoại (Zalo)" pattern="[0-9]{9,11}" required inputMode="numeric" />
           
           <button type="submit" className="btn btn-submit" disabled={status === "loading"}>
             {status === "loading" ? "Đang gửi..." : "NHẬN BÁO GIÁ NGAY"}

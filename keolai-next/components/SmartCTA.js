@@ -29,11 +29,15 @@ export default function SmartCTA({ article }) {
     e.preventDefault();
     setStatus("loading");
     
+    let utmData = {};
+    try { utmData = JSON.parse(sessionStorage.getItem("utm_data") || "{}"); } catch { /* ignore */ }
+
     const fd = new FormData(e.target);
     const body = {
       name: "Khách đọc bài",
       phone: fd.get("phone"),
       source: `article_cta_${article.slug}`,
+      utm: utmData,
     };
 
     try {
@@ -77,6 +81,7 @@ export default function SmartCTA({ article }) {
               placeholder="Nhập số điện thoại (Zalo)" 
               pattern="[0-9]{9,11}" 
               required 
+              inputMode="numeric"
               style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #ccc' }}
             />
             <button type="submit" className="btn" style={{ padding: '12px 24px' }} disabled={status === "loading"}>

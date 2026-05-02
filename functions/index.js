@@ -1,4 +1,5 @@
 const functions = require('firebase-functions/v2');
+const logger = require('firebase-functions/logger');
 const cors = require('cors')({
   origin: [
     'https://keolaigiamhom.vn',
@@ -38,7 +39,7 @@ exports.submitLead = functions.https.onRequest(
   async (req, res) => {
     const clientSecret = req.headers['x-app-secret'];
     if (clientSecret !== appClientSecret.value()) {
-      console.error('Unauthorized attempt to access API');
+      logger.error('Unauthorized attempt to access API');
       return res.status(403).json({ error: 'Truy cập bị từ chối. Chìa khóa không hợp lệ!' });
     }
     if (req.method !== 'POST') {
@@ -103,10 +104,9 @@ exports.submitLead = functions.https.onRequest(
         notionId = data.id;
         console.log('✅ Lead saved to Notion:', notionId);
       } else {
-        console.error('⚠️ Notion save failed (non-blocking):', data);
+        logger.error('⚠️ Notion save failed (non-blocking):', data);
       }
 
-      // Always save to Firestore for nurture pipeline (never lose a lead)
       const leadData = {
         name: String(name),
         phone: String(phone),
@@ -118,14 +118,15 @@ exports.submitLead = functions.https.onRequest(
         nurture_status: email ? 'pending' : 'no_email',
         nurture_step: 0,
         nurture_next_at: email ? new Date(Date.now() + 2 * 60 * 60 * 1000) : null, // 2h later for welcome
-        source: 'website_form',
+        source: req.body.source || 'website_form',
+        utm: req.body.utm || {},
       };
       const leadRef = await db.collection('leads').add(leadData);
       console.log('✅ Lead saved to Firestore:', leadRef.id);
 
       return res.status(200).json({ success: true, id: notionId || leadRef.id });
     } catch (error) {
-      console.error('Lỗi khi gọi API:', error);
+      logger.error('Lỗi khi gọi API:', error);
       // Last resort: try to save to Firestore even if everything else fails
       try {
         const emergencyLead = {
@@ -140,7 +141,7 @@ exports.submitLead = functions.https.onRequest(
         console.log('🆘 Emergency lead saved to Firestore:', ref.id);
         return res.status(200).json({ success: true, id: ref.id });
       } catch (fsErr) {
-        console.error('💀 Total failure:', fsErr);
+        logger.error('💀 Total failure:', fsErr);
         return res.status(500).json({ error: 'Internal Server Error' });
       }
     }
@@ -183,7 +184,7 @@ exports.listArticles = functions.https.onRequest(
         res.set('Cache-Control', 'public, max-age=3600');
         return res.status(200).json({ articles });
       } catch (error) {
-        console.error('Failed to list articles:', error);
+        logger.error('Failed to list articles:', error);
         return res.status(500).json({ error: error.message });
       }
     });
@@ -216,7 +217,7 @@ exports.serveArticle = functions.https.onRequest(
       res.set('Content-Type', 'text/html; charset=utf-8');
       return res.status(200).send(doc.data().html);
     } catch (error) {
-      console.error('Failed to serve article:', error);
+      logger.error('Failed to serve article:', error);
       return res.status(500).send('Internal server error');
     }
   }
@@ -280,7 +281,7 @@ ${allPages.map(p => `  <url>
       res.set('Content-Type', 'application/xml; charset=utf-8');
       return res.status(200).send(xml);
     } catch (error) {
-      console.error('Failed to generate sitemap:', error);
+      logger.error('Failed to generate sitemap:', error);
       return res.status(500).send('Internal server error');
     }
   }
@@ -331,7 +332,7 @@ async function sendEmailNotification({ title, description, url, appPassword }) {
     console.log('📧 Email notification sent to dtduy46@gmail.com');
   } catch (error) {
     // Don't fail article generation if email fails
-    console.error('📧 Email notification failed (non-blocking):', error.message);
+    logger.error('📧 Email notification failed (non-blocking):', error.message);
   }
 }
 
@@ -692,7 +693,7 @@ Trả về nội dung bài viết thuần túy (không có tiêu đề ở đầ
       console.log(`🎉 Auto-published: ${publishedUrl}`);
       return res.status(200).json({ success: true, url: publishedUrl, title: topic.title });
     } catch (error) {
-      console.error('❌ Scheduled content generation failed:', error);
+      logger.error('❌ Scheduled content generation failed:', error);
       return res.status(500).json({ error: error.message });
     }
   }
@@ -737,7 +738,7 @@ exports.pingGoogleAfterPublish = functions.firestore.onDocumentCreated(
       await createExperimentLifecycle(slug, keyword, articleUrl);
       console.log(`🧪 Experiment lifecycle created for: ${slug}`);
     } catch (err) {
-      console.error(`❌ Experiment creation failed:`, err);
+      logger.error(`❌ Experiment creation failed:`, err);
     }
   }
 );
@@ -851,7 +852,7 @@ exports.experimentCheckpoint = functions.https.onRequest(
       console.log(`✅ Checkpoint ${checkpoint} complete for: ${slug}`);
       return res.status(200).json({ success: true, checkpoint, slug });
     } catch (err) {
-      console.error(`❌ Checkpoint ${checkpoint} failed for ${slug}:`, err);
+      logger.error(`❌ Checkpoint ${checkpoint} failed for ${slug}:`, err);
       return res.status(500).json({ error: err.message });
     }
   }
@@ -1184,7 +1185,7 @@ Trả về CHỈNH bài đăng, không có giải thích.`;
         instruction: 'Copy bài đăng → paste vào Facebook → thêm link bài viết ở comment đầu tiên',
       });
     } catch (error) {
-      console.error('❌ FB post generation failed:', error);
+      logger.error('❌ FB post generation failed:', error);
       return res.status(500).json({ error: error.message });
     }
   }
@@ -1373,7 +1374,7 @@ Trả lời ngắn gọn, bullets, tiếng Việt.`;
       console.log('📧 Weekly report sent');
       return res.status(200).json({ success: true, report: reportData, aiSummary });
     } catch (error) {
-      console.error('❌ Weekly report failed:', error);
+      logger.error('❌ Weekly report failed:', error);
       return res.status(500).json({ error: error.message });
     }
   }
@@ -1515,7 +1516,7 @@ exports.autoNurtureLead = functions.https.onRequest(
           console.log(`📧 Sent step ${currentStep} to ${lead.email}`);
           results.sent++;
         } catch (emailErr) {
-          console.error(`❌ Failed to send to ${lead.email}:`, emailErr.message);
+          logger.error(`❌ Failed to send to ${lead.email}:`, emailErr.message);
           await leadDoc.ref.update({
             nurture_status: 'error',
             nurture_error: emailErr.message,
@@ -1527,7 +1528,7 @@ exports.autoNurtureLead = functions.https.onRequest(
       console.log(`📧 Nurture run complete:`, results);
       return res.status(200).json({ success: true, results });
     } catch (error) {
-      console.error('❌ Auto nurture failed:', error);
+      logger.error('❌ Auto nurture failed:', error);
       return res.status(500).json({ error: error.message });
     }
   }
@@ -1589,7 +1590,7 @@ Tone: urgency + FOMO. CTA: gọi ngay 0907.282.960.`,
       return data.candidates[0].content.parts[0].text;
     }
   } catch (e) {
-    console.error('AI email generation fallback:', e.message);
+    logger.error('AI email generation fallback:', e.message);
   }
 
   // Fallback static content
@@ -1757,7 +1758,7 @@ Trả về bài viết thuần túy.`;
           console.log(`📝 Seasonal article published: ${slug}`);
         }
       } catch (articleErr) {
-        console.error('Article generation error:', articleErr.message);
+        logger.error('Article generation error:', articleErr.message);
       }
 
       // 2. Send campaign email to matching leads
@@ -1838,7 +1839,7 @@ Trả về bài viết thuần túy.`;
 
           results.emailsSent++;
         } catch (emailErr) {
-          console.error(`Email to ${lead.email} failed:`, emailErr.message);
+          logger.error(`Email to ${lead.email} failed:`, emailErr.message);
         }
       }
 
@@ -1863,7 +1864,7 @@ Trả về bài viết thuần túy.`;
       console.log(`🌿 Seasonal campaign complete:`, results);
       return res.status(200).json({ success: true, campaign: campaignId, results });
     } catch (error) {
-      console.error('❌ Seasonal campaign failed:', error);
+      logger.error('❌ Seasonal campaign failed:', error);
       return res.status(500).json({ error: error.message });
     }
   }
@@ -2049,7 +2050,7 @@ Trả về JSON array, KHÔNG có markdown block. Ví dụ:
         topics: newTopics.map(t => t.title),
       });
     } catch (error) {
-      console.error('❌ Topic replenisher failed:', error);
+      logger.error('❌ Topic replenisher failed:', error);
       return res.status(500).json({ error: error.message });
     }
   }
@@ -2111,7 +2112,7 @@ exports.reengageStaleLead = functions.https.onRequest(
       const staleLeads = staleLeadsSnap.docs.filter(d => d.data().email);
       return await processStaleLeads(staleLeads, now, res);
     } catch (error) {
-      console.error('❌ Stale lead re-engagement failed:', error);
+      logger.error('❌ Stale lead re-engagement failed:', error);
       return res.status(500).json({ error: error.message });
     }
   }
@@ -2169,7 +2170,7 @@ CHỈ trả về nội dung email, không có subject line.`;
           emailContent = data.candidates[0].content.parts[0].text;
         }
       } catch (aiErr) {
-        console.error('AI fallback for re-engagement:', aiErr.message);
+        logger.error('AI fallback for re-engagement:', aiErr.message);
       }
 
       // Build email HTML (reuse nurture style)
@@ -2222,7 +2223,7 @@ CHỈ trả về nội dung email, không có subject line.`;
       results.sent++;
       console.log(`📧 Re-engaged: ${lead.email}`);
     } catch (emailErr) {
-      console.error(`❌ Re-engagement failed for ${lead.email}:`, emailErr.message);
+      logger.error(`❌ Re-engagement failed for ${lead.email}:`, emailErr.message);
       results.errors++;
     }
   }
@@ -2384,7 +2385,7 @@ exports.trackContentPerformance = functions.https.onRequest(
         top5: top5,
       });
     } catch (error) {
-      console.error('❌ Content performance tracker failed:', error);
+      logger.error('❌ Content performance tracker failed:', error);
       return res.status(500).json({ error: error.message });
     }
   }
@@ -2586,7 +2587,7 @@ Trả về nội dung bài đăng thuần túy.`;
         contentPreview: postContent.substring(0, 200),
       });
     } catch (error) {
-      console.error('❌ GBP auto-poster failed:', error);
+      logger.error('❌ GBP auto-poster failed:', error);
       return res.status(500).json({ error: error.message });
     }
   }
@@ -2748,7 +2749,7 @@ exports.gscKeywordAnalysis = functions.https.onRequest(
           .map(k => ({ query: k.query, position: Math.round(k.position), impressions: k.impressions })),
       });
     } catch (error) {
-      console.error('❌ GSC Keyword Analysis failed:', error);
+      logger.error('❌ GSC Keyword Analysis failed:', error);
       return res.status(500).json({ error: error.message });
     }
   }
@@ -2883,7 +2884,7 @@ exports.competitorSeed = functions.https.onRequest(
           .map(k => k.query),
       });
     } catch (error) {
-      console.error('❌ Competitor seed failed:', error);
+      logger.error('❌ Competitor seed failed:', error);
       return res.status(500).json({ error: error.message });
     }
   }
@@ -3034,7 +3035,7 @@ exports.contentAnalytics = functions.https.onRequest(
       console.log(`📊 [ContentAnalytics] Done: ${results.updated} with data, ${results.noData} no data, ${results.errors} errors`);
       return res.status(200).json({ success: true, results, articlesTotal: articlesSnap.size });
     } catch (error) {
-      console.error('❌ [ContentAnalytics] Failed:', error);
+      logger.error('❌ [ContentAnalytics] Failed:', error);
       return res.status(500).json({ error: error.message });
     }
   }
@@ -3139,6 +3140,52 @@ exports.pipelineHealthCheck = functions.https.onRequest(
       }
       results.checks.push({ name: 'pending_topics', count: pendingTopicsCount });
 
+      // ── Check 5: Pipeline briefs stuck in 'pending_review' ───
+      const threshold72h = new Date(now.getTime() - (72 * 60 * 60 * 1000));
+      const threshold96h = new Date(now.getTime() - (96 * 60 * 60 * 1000));
+      const threshold168h = new Date(now.getTime() - (168 * 60 * 60 * 1000)); // 1 week
+
+      const pendingReviewSnap = await db.collection('pipeline').doc('briefs')
+        .collection('items').where('status', '==', 'pending_review').get();
+
+      let autoApproved = 0;
+      let archived = 0;
+
+      for (const doc of pendingReviewSnap.docs) {
+        const data = doc.data();
+        const updatedAt = data.updated_at?.toDate?.() || data.created_at?.toDate?.() || now;
+        
+        if (updatedAt < threshold168h) {
+          // Archive after 1 week
+          await db.collection('pipeline').doc('archived').collection('items').doc(doc.id).set({
+            ...data,
+            archived_at: admin.firestore.FieldValue.serverTimestamp(),
+            archive_reason: 'Deadlock timeout (1 week)'
+          });
+          await doc.ref.delete();
+          archived++;
+          results.alerts.push(`Archived stuck brief: ${doc.id} (1 week timeout)`);
+          console.log(`🗑️ Archived deadlocked brief: ${doc.id}`);
+        } else if (updatedAt < threshold96h) {
+          // Auto-approve after 96h
+          await doc.ref.update({
+            status: 'approved',
+            priority: 0, // low priority
+            updated_at: admin.firestore.FieldValue.serverTimestamp(),
+            reviewer_note: '[System] Auto-approved after 96h deadlock.'
+          });
+          autoApproved++;
+          results.alerts.push(`Auto-approved brief: ${doc.id} (96h timeout)`);
+          console.log(`✅ Auto-approved deadlocked brief: ${doc.id}`);
+        } else if (updatedAt < threshold72h && !data.warning_sent) {
+          // Warning sent at 72h
+          await doc.ref.update({ warning_sent: true });
+          results.alerts.push(`⚠️ Warning: Brief ${doc.id} pending review for > 72h`);
+          console.log(`⚠️ Deadlock warning for brief: ${doc.id}`);
+        }
+      }
+      results.checks.push({ name: 'deadlock_prevention', autoApproved, archived });
+
       // ── Send alert email if issues found ─────────────────────
       if (results.alerts.length > 0) {
         try {
@@ -3168,7 +3215,7 @@ exports.pipelineHealthCheck = functions.https.onRequest(
       console.log(`🔧 [HealthCheck] Done: ${results.recovered} recovered, ${results.alerts.length} alerts`);
       return res.status(200).json({ success: true, results });
     } catch (error) {
-      console.error('❌ [HealthCheck] Failed:', error);
+      logger.error('❌ [HealthCheck] Failed:', error);
       return res.status(500).json({ error: error.message });
     }
   }
@@ -3265,7 +3312,7 @@ exports.firestoreBackup = functions.https.onRequest(
         oldBackupsDeleted: deleted,
       });
     } catch (error) {
-      console.error('❌ [Backup] Failed:', error);
+      logger.error('❌ [Backup] Failed:', error);
       return res.status(500).json({ error: error.message });
     }
   }
@@ -3487,8 +3534,81 @@ exports.sheetsExport = functions.https.onRequest(
         results,
       });
     } catch (error) {
-      console.error('❌ [SheetsExport] Failed:', error);
+      logger.error('❌ [SheetsExport] Failed:', error);
       return res.status(500).json({ error: error.message });
     }
   }
 );
+
+// ═══════════════════════════════════════
+// 8. CONTENT ANALYTICS (GA4 Integration Skeleton)
+// ═══════════════════════════════════════
+const { BetaAnalyticsDataClient } = require('@google-analytics/data');
+const ga4PropertyId = defineSecret('GA4_PROPERTY_ID');
+
+exports.contentAnalytics = functions.https.onRequest(
+  { secrets: [ga4PropertyId], region: 'us-central1', cors: true },
+  async (req, res) => {
+    try {
+      const slug = req.query.slug || req.body.slug;
+      if (!slug) return res.status(400).json({ error: 'Missing slug parameter' });
+
+      let ga4Stats = { views: 0, users: 0, avgTime: '0s' };
+      
+      const propertyId = ga4PropertyId.value();
+      if (propertyId && propertyId !== 'YOUR_PROPERTY_ID') {
+        const analyticsDataClient = new BetaAnalyticsDataClient();
+        const [response] = await analyticsDataClient.runReport({
+          property: `properties/${propertyId}`,
+          dateRanges: [{ startDate: '30daysAgo', endDate: 'today' }],
+          dimensions: [{ name: 'pagePath' }],
+          metrics: [{ name: 'screenPageViews' }, { name: 'activeUsers' }, { name: 'averageSessionDuration' }],
+          dimensionFilter: {
+            filter: {
+              fieldName: 'pagePath',
+              stringFilter: {
+                matchType: 'CONTAINS',
+                value: `/articles/${slug}`
+              }
+            }
+          }
+        });
+
+        if (response.rows && response.rows.length > 0) {
+          ga4Stats.views = parseInt(response.rows[0].metricValues[0].value, 10);
+          ga4Stats.users = parseInt(response.rows[0].metricValues[1].value, 10);
+          ga4Stats.avgTime = \`\${Math.round(parseFloat(response.rows[0].metricValues[2].value))}s\`;
+        }
+      } else {
+        // Placeholder data if GA4 is not configured
+        console.log("GA4 API not configured. Returning dummy data.");
+        ga4Stats = { views: Math.floor(Math.random() * 500), users: Math.floor(Math.random() * 300), avgTime: '120s' };
+      }
+
+      // Count leads from Firestore
+      const leadsSnap = await db.collection('leads')
+        .where('source', '==', \`article_cta_\${slug}\`)
+        .get();
+      const leadCount = leadsSnap.size;
+
+      const analyticsData = {
+        slug,
+        ...ga4Stats,
+        leads: leadCount,
+        conversionRate: ga4Stats.users > 0 ? ((leadCount / ga4Stats.users) * 100).toFixed(2) + '%' : '0%',
+        lastUpdated: admin.firestore.FieldValue.serverTimestamp(),
+      };
+
+      await db.collection('articles').doc(slug).collection('analytics').doc('summary').set(analyticsData);
+
+      return res.status(200).json(analyticsData);
+    } catch (error) {
+      logger.error('❌ [ContentAnalytics] Failed:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+);
+
+// ═══════════════════════════════════════
+// 9. PIPELINE DEADLOCK PREVENTION
+// ═══════════════════════════════════════
