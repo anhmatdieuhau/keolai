@@ -3544,7 +3544,9 @@ exports.sheetsExport = functions.https.onRequest(
 // 8. CONTENT ANALYTICS (GA4 Integration Skeleton)
 // ═══════════════════════════════════════
 const { BetaAnalyticsDataClient } = require('@google-analytics/data');
-const ga4PropertyId = defineString('GA4_PROPERTY_ID', { default: 'YOUR_PROPERTY_ID' });
+
+// Use process.env directly to bypass Firebase's strict defineString requirements during CI/CD
+const ga4PropertyId = process.env.GA4_PROPERTY_ID || 'YOUR_PROPERTY_ID';
 
 exports.contentAnalytics = functions.https.onRequest(
   { region: 'us-central1', cors: true },
@@ -3555,7 +3557,7 @@ exports.contentAnalytics = functions.https.onRequest(
 
       let ga4Stats = { views: 0, users: 0, avgTime: '0s' };
       
-      const propertyId = ga4PropertyId.value();
+      const propertyId = ga4PropertyId;
       if (propertyId && propertyId !== 'YOUR_PROPERTY_ID') {
         const analyticsDataClient = new BetaAnalyticsDataClient();
         const [response] = await analyticsDataClient.runReport({
