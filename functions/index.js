@@ -11,7 +11,7 @@ const cors = require('cors')({
 const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
 
-const { defineSecret } = require('firebase-functions/params');
+const { defineSecret, defineString } = require('firebase-functions/params');
 const { CloudTasksClient } = require('@google-cloud/tasks');
 const { google } = require('googleapis');
 
@@ -3544,10 +3544,10 @@ exports.sheetsExport = functions.https.onRequest(
 // 8. CONTENT ANALYTICS (GA4 Integration Skeleton)
 // ═══════════════════════════════════════
 const { BetaAnalyticsDataClient } = require('@google-analytics/data');
-const ga4PropertyId = defineSecret('GA4_PROPERTY_ID');
+const ga4PropertyId = defineString('GA4_PROPERTY_ID', { default: 'YOUR_PROPERTY_ID' });
 
 exports.contentAnalytics = functions.https.onRequest(
-  { secrets: [ga4PropertyId], region: 'us-central1', cors: true },
+  { region: 'us-central1', cors: true },
   async (req, res) => {
     try {
       const slug = req.query.slug || req.body.slug;
