@@ -1,0 +1,110 @@
+---
+title: "Rõ bài toán lớn: AI Marketing Agent System"
+---
+%% Bài toán: Làm sao để tự động hoá vòng lặp Marketing?
+%% 1. Research keyword trên Google → tổng hợp report
+%% 2. Report về Group duyệt → viết bài cho Website, Facebook, Social
+%% 3. Cron job lắng nghe comment → AI auto reply tăng tương tác
+%% 4. Phân tích hiệu quả → feed back keyword mới → lặp lại
+
+flowchart TB
+    subgraph DATA["☁️ Data Sources"]
+        direction LR
+        D1["🔍 Google Search<br/>SERP Results"]
+        D2["📊 GSC<br/>Rankings & CTR"]
+        D3["📈 GA4<br/>Traffic & Behavior"]
+        D4["📘 Facebook<br/>Insights & Comments"]
+        D5["🏪 Competitor<br/>Content & Ads"]
+    end
+
+    subgraph STRATEGY["🧠 Strategy & Planning"]
+        direction TB
+
+        HUMAN_S["👤 Human<br/>(Strategic Input)<br/>─────────────<br/>Chọn keyword<br/>Định hướng nội dung"]
+
+        RA["🤖 Research Agent<br/>─────────────────────<br/>Purpose: Thu thập data từ<br/>nhiều nguồn, phân tích<br/>đối thủ & thị trường,<br/>xuất research report"]
+
+        REPORT["📋 Artifact: Research Report<br/>─────────────<br/>• Keyword gaps<br/>• Content briefs<br/>• Competitor insights"]
+
+        HUMAN_S -->|"keyword<br/>input"| RA
+        RA --> REPORT
+    end
+
+    REVIEW["👤 Human Review<br/>──────────────<br/>Duyệt report trên Group<br/>✅ Approve / 🔄 Reject"]
+
+    subgraph EXECUTION["✍️ Content Creation & Distribution"]
+        direction TB
+
+        CA["🤖 Content Agent<br/>─────────────────────<br/>Purpose: Nhận brief đã duyệt,<br/>viết bài SEO tối ưu,<br/>tạo nhiều format cho<br/>từng kênh phân phối"]
+
+        ARTIFACT["📄 Artifact: Content Package<br/>─────────────<br/>• Bài website HTML<br/>• Post Facebook<br/>• Post Social"]
+
+        subgraph CHANNELS["📢 Kênh Phân Phối"]
+            direction LR
+            CH1["🌐 Website"]
+            CH2["📘 Facebook"]
+            CH3["📱 Social Media"]
+        end
+
+        CA --> ARTIFACT
+        ARTIFACT --> CHANNELS
+    end
+
+    subgraph ENGAGE["💬 Engagement & Interaction"]
+        direction TB
+
+        EA["🤖 Engagement Agent<br/>─────────────────────<br/>Purpose: Lắng nghe comment<br/>trên các kênh, AI tự động<br/>trả lời phù hợp, tăng<br/>tương tác & giữ chân user"]
+
+        LOG["🗄️ Conversation Log<br/>Lưu lịch sử tương tác"]
+
+        EA --> LOG
+    end
+
+    subgraph ANALYSIS["📊 Analysis & Learning"]
+        direction TB
+
+        AA["🤖 Analyst Agent<br/>─────────────────────<br/>Purpose: Tổng hợp metrics<br/>từ tất cả kênh, đánh giá<br/>hiệu quả content, đề xuất<br/>cải thiện cho vòng tiếp"]
+
+        INSIGHT["💡 Artifact: Insights<br/>─────────────<br/>• Top performing content<br/>• Keyword opportunities<br/>• Engagement patterns"]
+
+        AA --> INSIGHT
+    end
+
+    DATA --> RA
+    REPORT --> REVIEW
+    REVIEW -->|"✅ Approved"| CA
+    REVIEW -->|"🔄 Reject"| RA
+    CHANNELS --> EA
+    D4 -->|"new comments"| EA
+    CHANNELS --> AA
+    DATA --> AA
+    INSIGHT -->|"♻️ Feed back<br/>next cycle"| HUMAN_S
+
+    style DATA fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style STRATEGY fill:#fef9c3,stroke:#ca8a04,color:#1e293b
+    style REVIEW fill:#f59e0b,stroke:#d97706,color:#000
+    style EXECUTION fill:#dcfce7,stroke:#16a34a,color:#1e293b
+    style ENGAGE fill:#fee2e2,stroke:#dc2626,color:#1e293b
+    style ANALYSIS fill:#ede9fe,stroke:#7c3aed,color:#1e293b
+    style CHANNELS fill:#e0f2fe,stroke:#0284c7,color:#1e293b
+
+    style D1 fill:#334155,stroke:#475569,color:#e2e8f0
+    style D2 fill:#334155,stroke:#475569,color:#e2e8f0
+    style D3 fill:#334155,stroke:#475569,color:#e2e8f0
+    style D4 fill:#334155,stroke:#475569,color:#e2e8f0
+    style D5 fill:#334155,stroke:#475569,color:#e2e8f0
+
+    style RA fill:#6366f1,stroke:#4f46e5,color:#fff
+    style CA fill:#22c55e,stroke:#16a34a,color:#fff
+    style EA fill:#ef4444,stroke:#dc2626,color:#fff
+    style AA fill:#8b5cf6,stroke:#7c3aed,color:#fff
+
+    style HUMAN_S fill:#fff,stroke:#ca8a04,color:#1e293b
+    style REPORT fill:#fef3c7,stroke:#f59e0b,color:#1e293b
+    style ARTIFACT fill:#d1fae5,stroke:#22c55e,color:#1e293b
+    style INSIGHT fill:#ede9fe,stroke:#8b5cf6,color:#1e293b
+    style LOG fill:#fecaca,stroke:#ef4444,color:#1e293b
+
+    style CH1 fill:#bae6fd,stroke:#0284c7,color:#1e293b
+    style CH2 fill:#bae6fd,stroke:#0284c7,color:#1e293b
+    style CH3 fill:#bae6fd,stroke:#0284c7,color:#1e293b

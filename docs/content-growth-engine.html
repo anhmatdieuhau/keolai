@@ -1,0 +1,897 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>KeoLai — Content Growth Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --forest-900: #0a1f0e;
+    --forest-800: #122b17;
+    --forest-700: #1a3d22;
+    --forest-600: #245a31;
+    --forest-500: #2d7a3e;
+    --forest-400: #3da854;
+    --forest-300: #6ec97e;
+    --forest-200: #a8e4b4;
+    --forest-100: #d4f2da;
+    --forest-50: #eef9f0;
+
+    --earth-900: #2c1a0e;
+    --earth-700: #5c3a1e;
+    --earth-500: #8b6f47;
+    --earth-300: #c4a87a;
+    --earth-100: #f0e6d4;
+
+    --amber-500: #d4930a;
+    --amber-400: #f0a81a;
+    --amber-100: #fef3d0;
+
+    --sky-500: #1a8fbf;
+    --sky-100: #d4f0fe;
+
+    --coral-500: #d45a3a;
+    --coral-100: #fde4dd;
+
+    --bg: #f7f5f0;
+    --text: #1a1a1a;
+    --text-muted: #5a5a52;
+    --card-bg: #ffffff;
+    --radius: 16px;
+    --shadow: 0 2px 12px rgba(10,31,14,0.06);
+    --shadow-hover: 0 8px 32px rgba(10,31,14,0.12);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ═══ GRAIN OVERLAY ═══ */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 9999;
+  }
+
+  /* ═══ HEADER ═══ */
+  header {
+    background: linear-gradient(135deg, var(--forest-900) 0%, var(--forest-700) 100%);
+    color: white;
+    padding: 48px 40px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  header::after {
+    content: '';
+    position: absolute;
+    right: -60px;
+    top: -60px;
+    width: 280px;
+    height: 280px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(61,168,84,0.15) 0%, transparent 70%);
+  }
+
+  header::before {
+    content: '🌱';
+    position: absolute;
+    right: 48px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 64px;
+    opacity: 0.2;
+  }
+
+  .header-label {
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--forest-300);
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  header h1 {
+    font-family: 'Instrument Serif', serif;
+    font-size: 42px;
+    font-weight: 400;
+    line-height: 1.1;
+    margin-bottom: 8px;
+  }
+
+  header p {
+    color: var(--forest-200);
+    font-size: 15px;
+    max-width: 520px;
+    line-height: 1.5;
+  }
+
+  /* ═══ MAIN ═══ */
+  main { max-width: 1200px; margin: 0 auto; padding: 40px 24px 80px; }
+
+  /* ═══ PHASE PIPELINE ═══ */
+  .section-label {
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    font-weight: 600;
+    margin-bottom: 20px;
+  }
+
+  .pipeline {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    margin-bottom: 48px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+
+  .phase {
+    padding: 28px 24px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    position: relative;
+  }
+
+  .phase::after {
+    content: '→';
+    position: absolute;
+    right: -6px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    z-index: 2;
+    color: rgba(255,255,255,0.5);
+    font-weight: 700;
+  }
+
+  .phase:last-child::after { content: '↻'; right: 12px; font-size: 20px; }
+
+  .phase:hover { filter: brightness(1.05); transform: translateY(-2px); }
+  .phase.active { filter: brightness(1.08); box-shadow: inset 0 -4px 0 rgba(255,255,255,0.3); }
+
+  .phase-1 { background: var(--forest-600); color: white; }
+  .phase-2 { background: var(--amber-500); color: white; }
+  .phase-3 { background: var(--sky-500); color: white; }
+  .phase-4 { background: var(--earth-700); color: white; }
+
+  .phase-icon { font-size: 28px; margin-bottom: 10px; }
+  .phase-name { font-weight: 700; font-size: 14px; margin-bottom: 4px; }
+  .phase-desc { font-size: 12px; opacity: 0.8; line-height: 1.4; }
+
+  /* ═══ DETAIL PANEL ═══ */
+  .detail-panel {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 32px;
+    margin-bottom: 48px;
+    display: none;
+    animation: slideUp 0.3s ease;
+  }
+
+  .detail-panel.visible { display: block; }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .detail-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--forest-100);
+  }
+
+  .detail-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    flex-shrink: 0;
+  }
+
+  .detail-title { font-family: 'Instrument Serif', serif; font-size: 26px; }
+  .detail-subtitle { font-size: 13px; color: var(--text-muted); margin-top: 2px; }
+
+  .detail-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+
+  .detail-card {
+    padding: 20px;
+    border-radius: 12px;
+    background: var(--forest-50);
+    border: 1px solid var(--forest-100);
+  }
+
+  .detail-card h4 {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--forest-600);
+    margin-bottom: 10px;
+  }
+
+  .detail-card p, .detail-card li {
+    font-size: 14px;
+    line-height: 1.6;
+    color: var(--text-muted);
+  }
+
+  .detail-card ul { list-style: none; padding: 0; }
+  .detail-card li::before { content: '▸ '; color: var(--forest-400); font-weight: 700; }
+
+  /* ═══ AGENT GRID ═══ */
+  .agents-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+
+  .agent-card {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    padding: 24px;
+    box-shadow: var(--shadow);
+    cursor: pointer;
+    transition: all 0.25s ease;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .agent-card:hover {
+    box-shadow: var(--shadow-hover);
+    transform: translateY(-3px);
+  }
+
+  .agent-card.selected { border-color: var(--forest-400); }
+
+  .agent-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    margin-bottom: 14px;
+  }
+
+  .badge-ai { background: var(--forest-100); color: var(--forest-700); }
+  .badge-human { background: var(--amber-100); color: var(--amber-500); }
+
+  .agent-name {
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+
+  .agent-role {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    margin-bottom: 16px;
+  }
+
+  .agent-tools {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .tool-tag {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: var(--bg);
+    color: var(--text-muted);
+    font-weight: 500;
+    border: 1px solid #e5e2da;
+  }
+
+  /* ═══ INFRA SECTION ═══ */
+  .infra-bar {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2px;
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+    margin-bottom: 48px;
+  }
+
+  .infra-item {
+    background: var(--forest-900);
+    color: var(--forest-200);
+    padding: 20px;
+    text-align: center;
+  }
+
+  .infra-icon { font-size: 24px; margin-bottom: 8px; }
+  .infra-name { font-weight: 700; font-size: 13px; color: white; margin-bottom: 2px; }
+  .infra-desc { font-size: 11px; opacity: 0.7; }
+  .infra-status {
+    display: inline-block;
+    margin-top: 8px;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 700;
+    background: rgba(61,168,84,0.2);
+    color: var(--forest-300);
+    letter-spacing: 0.5px;
+  }
+
+  /* ═══ FLOW DIAGRAM (SVG) ═══ */
+  .flow-section {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 32px;
+    margin-bottom: 48px;
+  }
+
+  .flow-svg {
+    width: 100%;
+    height: auto;
+  }
+
+  .flow-svg text {
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  /* ═══ KEYWORDS CLOUD ═══ */
+  .keywords-section {
+    background: var(--card-bg);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    padding: 32px;
+  }
+
+  .keyword-clusters {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 16px;
+    margin-top: 20px;
+  }
+
+  .cluster {
+    padding: 16px;
+    border-radius: 12px;
+    border: 1px solid var(--forest-100);
+  }
+
+  .cluster-name {
+    font-size: 12px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+    color: var(--forest-600);
+  }
+
+  .cluster-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .kw-tag {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    background: var(--forest-50);
+    color: var(--forest-700);
+    border: 1px solid var(--forest-100);
+    cursor: default;
+    transition: all 0.2s;
+  }
+
+  .kw-tag:hover {
+    background: var(--forest-400);
+    color: white;
+    border-color: var(--forest-400);
+  }
+
+  /* ═══ FOOTER ═══ */
+  footer {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px 48px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 13px;
+  }
+
+  footer span { color: var(--forest-400); }
+
+  /* ═══ RESPONSIVE ═══ */
+  @media (max-width: 768px) {
+    .pipeline { grid-template-columns: 1fr 1fr; }
+    .phase::after { display: none; }
+    .agents-grid { grid-template-columns: 1fr; }
+    .detail-grid { grid-template-columns: 1fr; }
+    .infra-bar { grid-template-columns: 1fr 1fr; }
+    .keyword-clusters { grid-template-columns: 1fr; }
+    header h1 { font-size: 28px; }
+    header::before { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ═══════════ HEADER ═══════════ -->
+<header>
+  <div class="header-label">System Architecture v1.0</div>
+  <h1>Content Growth Engine</h1>
+  <p>Multi-Agent AI System — Tự động hóa vòng lặp Inbound Marketing cho vườn ươm Keo Lai Xanh</p>
+</header>
+
+<main>
+
+  <!-- ═══════════ PIPELINE ═══════════ -->
+  <div class="section-label" style="margin-top: 8px;">▎ 4-Phase Pipeline</div>
+  <div class="pipeline">
+    <div class="phase phase-1 active" onclick="showPhase(0)">
+      <div class="phase-icon">🔍</div>
+      <div class="phase-name">Discovery</div>
+      <div class="phase-desc">Trend scanning + SEO audit</div>
+    </div>
+    <div class="phase phase-2" onclick="showPhase(1)">
+      <div class="phase-icon">📝</div>
+      <div class="phase-name">Production</div>
+      <div class="phase-desc">Brief → Review → Write</div>
+    </div>
+    <div class="phase phase-3" onclick="showPhase(2)">
+      <div class="phase-icon">📢</div>
+      <div class="phase-name">Distribution</div>
+      <div class="phase-desc">Publish + Engagement</div>
+    </div>
+    <div class="phase phase-4" onclick="showPhase(3)">
+      <div class="phase-icon">📊</div>
+      <div class="phase-name">Analysis</div>
+      <div class="phase-desc">Performance → Feedback loop</div>
+    </div>
+  </div>
+
+  <!-- ═══════════ DETAIL PANEL ═══════════ -->
+  <div class="detail-panel visible" id="detailPanel"></div>
+
+  <!-- ═══════════ FLOW DIAGRAM ═══════════ -->
+  <div class="section-label">▎ Data Flow</div>
+  <div class="flow-section">
+    <svg class="flow-svg" viewBox="0 0 960 420" xmlns="http://www.w3.org/2000/svg">
+      <!-- Defs -->
+      <defs>
+        <marker id="arrow" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 3.5 L 0 7 z" fill="#3da854"/>
+        </marker>
+        <marker id="arrow-amber" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 3.5 L 0 7 z" fill="#d4930a"/>
+        </marker>
+        <marker id="arrow-muted" viewBox="0 0 10 7" refX="10" refY="3.5" markerWidth="8" markerHeight="6" orient="auto-start-reverse">
+          <path d="M 0 0 L 10 3.5 L 0 7 z" fill="#aaa"/>
+        </marker>
+        <filter id="shadow-sm">
+          <feDropShadow dx="0" dy="2" stdDeviation="4" flood-opacity=".06"/>
+        </filter>
+      </defs>
+
+      <!-- ── DATA SOURCES (top) ── -->
+      <g transform="translate(0, 0)">
+        <rect x="20" y="10" width="150" height="50" rx="10" fill="#1a3d22" filter="url(#shadow-sm)"/>
+        <text x="95" y="30" text-anchor="middle" fill="#a8e4b4" font-size="10" font-weight="700">DATA SOURCES</text>
+        <text x="95" y="46" text-anchor="middle" fill="#6ec97e" font-size="11">GSC · Trends · GA4</text>
+
+        <rect x="190" y="10" width="120" height="50" rx="10" fill="#2c1a0e" filter="url(#shadow-sm)"/>
+        <text x="250" y="30" text-anchor="middle" fill="#c4a87a" font-size="10" font-weight="700">FACEBOOK</text>
+        <text x="250" y="46" text-anchor="middle" fill="#c4a87a" font-size="11">Comments · Insights</text>
+      </g>
+
+      <!-- ── MEMORY LAYER (right) ── -->
+      <g transform="translate(720, 10)">
+        <rect x="0" y="0" width="220" height="140" rx="12" fill="#f7f5f0" stroke="#e5e2da" stroke-width="1.5" filter="url(#shadow-sm)"/>
+        <text x="110" y="24" text-anchor="middle" fill="#5a5a52" font-size="10" font-weight="700" letter-spacing="1">MEMORY LAYER</text>
+        <rect x="12" y="36" width="196" height="30" rx="6" fill="#eef9f0" stroke="#d4f2da"/>
+        <text x="110" y="56" text-anchor="middle" fill="#245a31" font-size="11">📋 Decision Log</text>
+        <rect x="12" y="72" width="196" height="30" rx="6" fill="#eef9f0" stroke="#d4f2da"/>
+        <text x="110" y="92" text-anchor="middle" fill="#245a31" font-size="11">📚 Knowledge Base</text>
+        <rect x="12" y="108" width="196" height="30" rx="6" fill="#eef9f0" stroke="#d4f2da"/>
+        <text x="110" y="128" text-anchor="middle" fill="#245a31" font-size="11">🔑 Seed Keywords</text>
+      </g>
+
+      <!-- ── AGENT PIPELINE (center) ── -->
+      <!-- Analyst -->
+      <rect x="40" y="100" width="150" height="70" rx="12" fill="#245a31" filter="url(#shadow-sm)"/>
+      <text x="115" y="125" text-anchor="middle" fill="white" font-size="12" font-weight="700">🔍 Analyst Agent</text>
+      <text x="115" y="145" text-anchor="middle" fill="#a8e4b4" font-size="10">Trend + SEO Audit</text>
+      <text x="115" y="160" text-anchor="middle" fill="#6ec97e" font-size="9">Cron T2-T6, 5:00 AM</text>
+
+      <!-- Arrow: Data → Analyst -->
+      <line x1="95" y1="60" x2="95" y2="98" stroke="#3da854" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <!-- Research -->
+      <rect x="250" y="100" width="150" height="70" rx="12" fill="#8b6f47" filter="url(#shadow-sm)"/>
+      <text x="325" y="125" text-anchor="middle" fill="white" font-size="12" font-weight="700">📝 Research Agent</text>
+      <text x="325" y="145" text-anchor="middle" fill="#f0e6d4" font-size="10">Content Brief</text>
+      <text x="325" y="160" text-anchor="middle" fill="#c4a87a" font-size="9">Brave + Knowledge Base</text>
+
+      <!-- Arrow: Analyst → Research -->
+      <line x1="190" y1="135" x2="248" y2="135" stroke="#3da854" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <!-- Human Review -->
+      <rect x="300" y="210" width="160" height="56" rx="12" fill="#f0a81a" filter="url(#shadow-sm)"/>
+      <text x="380" y="234" text-anchor="middle" fill="white" font-size="12" font-weight="700">👤 Human Review</text>
+      <text x="380" y="252" text-anchor="middle" fill="#fff" font-size="10" opacity="0.85">Telegram · Approve / Reject</text>
+
+      <!-- Arrow: Research → Review -->
+      <line x1="340" y1="170" x2="365" y2="208" stroke="#d4930a" stroke-width="2" marker-end="url(#arrow-amber)"/>
+
+      <!-- Arrow: Reject back to Research -->
+      <path d="M 300,238 L 270,238 L 270,165 L 250,150" fill="none" stroke="#aaa" stroke-width="1.5" stroke-dasharray="5,3" marker-end="url(#arrow-muted)"/>
+      <text x="258" y="200" fill="#999" font-size="9" text-anchor="middle">Reject</text>
+
+      <!-- Content -->
+      <rect x="510" y="210" width="150" height="70" rx="12" fill="#1a8fbf" filter="url(#shadow-sm)"/>
+      <text x="585" y="234" text-anchor="middle" fill="white" font-size="12" font-weight="700">✍️ Content Agent</text>
+      <text x="585" y="252" text-anchor="middle" fill="#d4f0fe" font-size="10">Write + Image + Publish</text>
+      <text x="585" y="267" text-anchor="middle" fill="#a0d8ef" font-size="9">Vertex AI + Sitemap</text>
+
+      <!-- Arrow: Review → Content (Approve) -->
+      <line x1="460" y1="238" x2="508" y2="238" stroke="#3da854" stroke-width="2" marker-end="url(#arrow)"/>
+      <text x="484" y="230" fill="#3da854" font-size="9" text-anchor="middle" font-weight="700">✅</text>
+
+      <!-- Engagement -->
+      <rect x="510" y="320" width="150" height="70" rx="12" fill="#d45a3a" filter="url(#shadow-sm)"/>
+      <text x="585" y="346" text-anchor="middle" fill="white" font-size="12" font-weight="700">💬 Engagement</text>
+      <text x="585" y="364" text-anchor="middle" fill="#fde4dd" font-size="10">Auto-reply Comments</text>
+      <text x="585" y="378" text-anchor="middle" fill="#f0b8a8" font-size="9">FB Webhook + CTA Zalo</text>
+
+      <!-- Arrow: Content → Engagement -->
+      <line x1="585" y1="280" x2="585" y2="318" stroke="#3da854" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <!-- Arrow: Facebook → Engagement -->
+      <path d="M 250,60 L 250,86 L 510,86 L 510,320" fill="none" stroke="#d45a3a" stroke-width="1.5" stroke-dasharray="5,3"/>
+
+      <!-- ── INFRASTRUCTURE (bottom) ── -->
+      <rect x="40" y="340" width="400" height="60" rx="12" fill="#0a1f0e" filter="url(#shadow-sm)"/>
+      <text x="60" y="365" fill="#6ec97e" font-size="10" font-weight="700" letter-spacing="1">INFRASTRUCTURE (EXISTING)</text>
+      <text x="60" y="383" fill="#a8e4b4" font-size="11">Next.js 16  ·  Firebase Functions  ·  Firestore  ·  Vertex AI  ·  Cloud Scheduler</text>
+      <rect x="340" y="350" width="80" height="24" rx="6" fill="rgba(61,168,84,0.2)"/>
+      <text x="380" y="366" text-anchor="middle" fill="#3da854" font-size="10" font-weight="700">LIVE ✓</text>
+
+      <!-- Arrow: Content → Infra -->
+      <path d="M 510,258 L 470,258 L 470,340" fill="none" stroke="#3da854" stroke-width="2" marker-end="url(#arrow)"/>
+
+      <!-- Arrow: Memory → Analyst -->
+      <path d="M 720,80 L 700,80 L 700,135 L 192,135" fill="none" stroke="#aaa" stroke-width="1" stroke-dasharray="4,3"/>
+
+      <!-- Feedback Loop -->
+      <path d="M 60,340 L 60,300 L 30,300 L 30,135 L 38,135" fill="none" stroke="#3da854" stroke-width="2" stroke-dasharray="6,3" marker-end="url(#arrow)"/>
+      <text x="14" y="220" fill="#3da854" font-size="10" font-weight="700" transform="rotate(-90, 14, 220)">♻️ FEEDBACK LOOP</text>
+    </svg>
+  </div>
+
+  <!-- ═══════════ AGENTS ═══════════ -->
+  <div class="section-label">▎ Agent Roster</div>
+  <div class="agents-grid">
+    <div class="agent-card" onclick="selectAgent(this)">
+      <div class="agent-badge badge-ai">🤖 AI Agent</div>
+      <div class="agent-name">🔍 Analyst Agent</div>
+      <div class="agent-role">Quét xu hướng nông nghiệp (GSC + Trends). Kiểm toán Index bài cũ ngày 3+7.</div>
+      <div class="agent-tools">
+        <span class="tool-tag">gsc-mcp</span>
+        <span class="tool-tag">google-trends</span>
+        <span class="tool-tag">url-inspection</span>
+        <span class="tool-tag">analytics-mcp</span>
+      </div>
+    </div>
+    <div class="agent-card" onclick="selectAgent(this)">
+      <div class="agent-badge badge-ai">🤖 AI Agent</div>
+      <div class="agent-name">📝 Research Agent</div>
+      <div class="agent-role">Nhận keywords → Lập Content Brief theo Brand Voice KeoLai, gắn CTA đặt giống.</div>
+      <div class="agent-tools">
+        <span class="tool-tag">brave-search</span>
+        <span class="tool-tag">knowledge-base</span>
+        <span class="tool-tag">brand-voice</span>
+      </div>
+    </div>
+    <div class="agent-card" onclick="selectAgent(this)">
+      <div class="agent-badge badge-human">👤 Human</div>
+      <div class="agent-name">✅ Review System</div>
+      <div class="agent-role">Admin duyệt Brief qua Telegram Bot. Approve / Reject kèm feedback. Auto-approve sau 48h.</div>
+      <div class="agent-tools">
+        <span class="tool-tag">telegram-bot</span>
+        <span class="tool-tag">callback-query</span>
+      </div>
+    </div>
+    <div class="agent-card" onclick="selectAgent(this)">
+      <div class="agent-badge badge-ai">🤖 AI Agent</div>
+      <div class="agent-name">✍️ Content Agent</div>
+      <div class="agent-role">Viết bài SEO 2,000 từ, tạo ảnh vườn ươm, đẩy Firestore, submit Sitemap.</div>
+      <div class="agent-tools">
+        <span class="tool-tag">vertex-ai</span>
+        <span class="tool-tag">gemini-image</span>
+        <span class="tool-tag">sitemap-api</span>
+        <span class="tool-tag">firestore</span>
+      </div>
+    </div>
+    <div class="agent-card" onclick="selectAgent(this)">
+      <div class="agent-badge badge-ai">🤖 AI Agent</div>
+      <div class="agent-name">💬 Engagement Agent</div>
+      <div class="agent-role">Auto-reply comment Facebook. Phân tích intent → CTA Zalo 0373 850 884.</div>
+      <div class="agent-tools">
+        <span class="tool-tag">fb-webhook</span>
+        <span class="tool-tag">intent-analysis</span>
+        <span class="tool-tag">zalo-deeplink</span>
+      </div>
+    </div>
+    <div class="agent-card" onclick="selectAgent(this)">
+      <div class="agent-badge badge-ai">🤖 AI Agent</div>
+      <div class="agent-name">🧠 Memory Agent</div>
+      <div class="agent-role">Đọc Decision Log, đánh giá keyword đã viết, hiệu quả ra sao → feedback Analyst.</div>
+      <div class="agent-tools">
+        <span class="tool-tag">firestore</span>
+        <span class="tool-tag">decision-log</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════ INFRASTRUCTURE ═══════════ -->
+  <div class="section-label">▎ Infrastructure (Existing · Firebase)</div>
+  <div class="infra-bar">
+    <div class="infra-item">
+      <div class="infra-icon">🌐</div>
+      <div class="infra-name">Next.js 16</div>
+      <div class="infra-desc">Static Export · SSG</div>
+      <div class="infra-status">LIVE</div>
+    </div>
+    <div class="infra-item">
+      <div class="infra-icon">⚡</div>
+      <div class="infra-name">Cloud Functions</div>
+      <div class="infra-desc">Node.js · Vertex AI</div>
+      <div class="infra-status">LIVE</div>
+    </div>
+    <div class="infra-item">
+      <div class="infra-icon">🗄️</div>
+      <div class="infra-name">Firestore</div>
+      <div class="infra-desc">articles · leads · topics</div>
+      <div class="infra-status">LIVE</div>
+    </div>
+    <div class="infra-item">
+      <div class="infra-icon">⏰</div>
+      <div class="infra-name">Cloud Scheduler</div>
+      <div class="infra-desc">Daily 09:00 VN · Nurture</div>
+      <div class="infra-status">LIVE</div>
+    </div>
+  </div>
+
+  <!-- ═══════════ SEED KEYWORDS ═══════════ -->
+  <div class="section-label">▎ Seed Keywords Matrix</div>
+  <div class="keywords-section">
+    <div class="keyword-clusters">
+      <div class="cluster">
+        <div class="cluster-name">🌿 Sản phẩm</div>
+        <div class="cluster-tags">
+          <span class="kw-tag">cây giống keo lai AH1</span>
+          <span class="kw-tag">giống keo lai giâm hom</span>
+          <span class="kw-tag">mua cây keo lai</span>
+        </div>
+      </div>
+      <div class="cluster">
+        <div class="cluster-name">🔬 Kỹ thuật</div>
+        <div class="cluster-tags">
+          <span class="kw-tag">kỹ thuật giâm đọt keo</span>
+          <span class="kw-tag">cách ươm cây keo lai</span>
+          <span class="kw-tag">phun sương tự động</span>
+        </div>
+      </div>
+      <div class="cluster">
+        <div class="cluster-name">📅 Mùa vụ</div>
+        <div class="cluster-tags">
+          <span class="kw-tag">mua keo giống mùa mưa</span>
+          <span class="kw-tag">trồng keo miền trung</span>
+          <span class="kw-tag">thời điểm trồng keo</span>
+        </div>
+      </div>
+      <div class="cluster">
+        <div class="cluster-name">⚖️ So sánh</div>
+        <div class="cluster-tags">
+          <span class="kw-tag">keo lai AH1 vs BV10</span>
+          <span class="kw-tag">giâm hom vs ươm hạt</span>
+        </div>
+      </div>
+      <div class="cluster">
+        <div class="cluster-name">💰 Kinh doanh</div>
+        <div class="cluster-tags">
+          <span class="kw-tag">giá cây giống keo 2026</span>
+          <span class="kw-tag">đặt keo số lượng lớn</span>
+          <span class="kw-tag">vườn ươm keo miền trung</span>
+        </div>
+      </div>
+      <div class="cluster">
+        <div class="cluster-name">🌏 Xuất khẩu</div>
+        <div class="cluster-tags">
+          <span class="kw-tag">xuất khẩu giống keo Lào</span>
+          <span class="kw-tag">bán cây giống biên giới</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <span>🌱</span> KeoLai Content Growth Engine · System Architecture v1.0 · April 2026
+</footer>
+
+<script>
+  // ═══ PHASE DATA ═══
+  const phases = [
+    {
+      icon: '🔍',
+      title: 'Phase 1 — Discovery',
+      subtitle: 'Trend Scanning & SEO Audit',
+      color: '#245a31',
+      cards: [
+        {
+          title: 'Trigger',
+          content: '<ul><li>Cron job T2-T6, 05:00 AM (VN)</li><li>Analyst Agent tự động quét</li></ul>'
+        },
+        {
+          title: 'Quy trình',
+          content: '<ul><li>Quét Google Trends → từ khóa nông nghiệp</li><li>Quét GSC → rankings + CTR hiện tại</li><li>Đối chiếu Decision Log → tránh trùng</li><li>Check Index bài cũ (ngày 3 + ngày 7)</li></ul>'
+        },
+        {
+          title: 'Output',
+          content: '<p>Danh sách keyword mới có tiềm năng, kèm volume + competition score</p>'
+        },
+        {
+          title: 'Exception',
+          content: '<ul><li>Bài >7 ngày chưa index → Alert Telegram</li><li>GSC API quota → Chờ 24h retry</li></ul>'
+        }
+      ]
+    },
+    {
+      icon: '📝',
+      title: 'Phase 2 — Production',
+      subtitle: 'Content Brief → Human Review → Write & Publish',
+      color: '#8b6f47',
+      cards: [
+        {
+          title: 'Research Agent',
+          content: '<ul><li>Nhận keywords từ Analyst</li><li>Brave Search → research context</li><li>Lập Brief theo Brand Voice KeoLai</li><li>Gắn CTA: Zalo 0373 850 884</li></ul>'
+        },
+        {
+          title: 'Human Review',
+          content: '<ul><li>Telegram Bot gửi Brief cho admin</li><li>Buttons: ✅ Approve / 🔄 Reject</li><li>Reject → kèm feedback → sửa Brief</li><li>>48h không phản hồi → Auto-Approve</li></ul>'
+        },
+        {
+          title: 'Content Agent',
+          content: '<ul><li>Viết bài SEO ~2,000 từ (Vertex AI)</li><li>Tạo ảnh minh họa vườn ươm (Gemini Image)</li><li>Đẩy Firestore → serveArticle</li><li>Submit Sitemap → ép Google crawl</li></ul>'
+        },
+        {
+          title: 'Business Rules',
+          content: '<ul><li>BR_01: Giọng chuyên gia thực tiễn</li><li>BR_02: Trung thành Knowledge Base</li><li>BR_05: Đúng thuật ngữ Brand Voice</li></ul>'
+        }
+      ]
+    },
+    {
+      icon: '📢',
+      title: 'Phase 3 — Distribution',
+      subtitle: 'Publish & Social Engagement',
+      color: '#1a8fbf',
+      cards: [
+        {
+          title: 'Channels',
+          content: '<ul><li>🌐 Website (keolaigiamhom.vn)</li><li>📘 Facebook Page</li><li>📱 Zalo (tư vấn trực tiếp)</li></ul>'
+        },
+        {
+          title: 'Engagement Agent',
+          content: '<ul><li>FB Webhook → lắng nghe comment</li><li>AI phân tích intent (hỏi giá, kỹ thuật, spam)</li><li>Auto-reply theo brand voice</li><li>CTA → Zalo deeplink</li></ul>'
+        },
+        {
+          title: 'Lead Routing',
+          content: '<ul><li>Form website → submitLead → Firestore</li><li>5-step email nurture (đã có)</li><li>Zalo direct → tư vấn viên</li></ul>'
+        },
+        {
+          title: 'Exception',
+          content: '<ul><li>Comment tiêu cực → Skip (không phản hồi)</li><li>FB API lỗi → Alert admin trên Telegram</li></ul>'
+        }
+      ]
+    },
+    {
+      icon: '📊',
+      title: 'Phase 4 — Analysis',
+      subtitle: 'Performance Tracking & Feedback Loop',
+      color: '#5c3a1e',
+      cards: [
+        {
+          title: 'Metrics thu thập',
+          content: '<ul><li>GA4: traffic, bounce rate, time on page</li><li>GSC: impressions, clicks, avg position</li><li>Firestore: leads generated per article</li><li>Facebook: engagement rate per post</li></ul>'
+        },
+        {
+          title: 'Decision Log Update',
+          content: '<ul><li>Ghi nhận keyword → performance</li><li>Đánh dấu: thành công / cần cải thiện</li><li>Recommend cluster mở rộng</li></ul>'
+        },
+        {
+          title: 'Feedback → Analyst',
+          content: '<p>Insights feed ngược về Analyst Agent cho vòng lặp tiếp theo. Keywords thành công → mở rộng cluster. Keywords thất bại → loại bỏ.</p>'
+        },
+        {
+          title: 'Seasonal Adjustment',
+          content: '<ul><li>BR_06: Ưu tiên mùa vụ tự động</li><li>Trước mỗi vụ 1.5 tháng → tăng frequency ×2</li><li>Q3 T7-9: Focus Miền Trung</li></ul>'
+        }
+      ]
+    }
+  ];
+
+  // ═══ RENDER PHASE DETAIL ═══
+  function showPhase(index) {
+    const phase = phases[index];
+    document.querySelectorAll('.phase').forEach((el, i) => {
+      el.classList.toggle('active', i === index);
+    });
+
+    const panel = document.getElementById('detailPanel');
+    panel.className = 'detail-panel';
+    // force reflow
+    void panel.offsetWidth;
+    panel.className = 'detail-panel visible';
+
+    panel.innerHTML = `
+      <div class="detail-header">
+        <div class="detail-icon" style="background: ${phase.color}; color: white;">${phase.icon}</div>
+        <div>
+          <div class="detail-title">${phase.title}</div>
+          <div class="detail-subtitle">${phase.subtitle}</div>
+        </div>
+      </div>
+      <div class="detail-grid">
+        ${phase.cards.map(card => `
+          <div class="detail-card">
+            <h4>${card.title}</h4>
+            ${card.content}
+          </div>
+        `).join('')}
+      </div>
+    `;
+  }
+
+  // ═══ AGENT SELECTION ═══
+  function selectAgent(card) {
+    document.querySelectorAll('.agent-card').forEach(c => c.classList.remove('selected'));
+    card.classList.add('selected');
+  }
+
+  // ═══ INIT ═══
+  showPhase(0);
+</script>
+</body>
+</html>

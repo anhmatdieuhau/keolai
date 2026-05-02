@@ -1,0 +1,55 @@
+name: Deploy KeoLai to Firebase
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch: # Allow manual trigger
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+          cache-dependency-path: keolai-next/package-lock.json
+
+      # ── Build Next.js static site ─────────────────────────
+      - name: Install Next.js dependencies
+        run: npm ci
+        working-directory: keolai-next
+
+      - name: Build Next.js (static export)
+        run: npm run build
+        working-directory: keolai-next
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+
+      # ── Install Firebase Functions dependencies ────────────
+      - name: Install Functions dependencies
+        run: npm ci
+        working-directory: functions
+
+      # ── Deploy to Firebase ─────────────────────────────────
+      - name: Deploy to Firebase (Hosting + Functions)
+        uses: FirebaseExtended/action-hosting-deploy@v0
+        with:
+          repoToken: ${{ secrets.GITHUB_TOKEN }}
+          firebaseServiceAccount: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_KEOLAI_63EC1 }}
+          projectId: keolai-63ec1
+          channelId: live
+          target: keolai-63ec1
+
+      - name: Deploy Firebase Functions
+        run: npx firebase-tools deploy --only functions --project keolai-63ec1 --token "$FIREBASE_TOKEN" --non-interactive
+        working-directory: .
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_CI_TOKEN }}

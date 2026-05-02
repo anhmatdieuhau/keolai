@@ -1,0 +1,302 @@
+[
+  {
+    "day": 1,
+    "slug": "cach-xu-ly-dat-truoc-khi-trong-keo",
+    "title": "Cách Xử Lý Đất Trước Khi Trồng Keo Lai — Cải Tạo Đất Xám, Đất Đỏ Vàng",
+    "description": "Hướng dẫn chi tiết xử lý đất trước khi trồng keo lai AH1. Kỹ thuật cải tạo đất xám bạc màu, đất đỏ vàng, đất đồi núi. Công thức bón vôi, phân hữu cơ để tăng pH và độ phì nhiêu.",
+    "keywords": "xử lý đất trồng keo, cải tạo đất xám, đất đỏ vàng, bón vôi, pH đất",
+    "label": "Kỹ thuật đất",
+    "breadcrumb": "Xử lý đất",
+    "stats": "pH lý tưởng:5.5-6.5|Vôi:300-500kg/ha|Phân hữu cơ:2-3 tấn/ha|Cuốc hố:30x30x30cm"
+  },
+  {
+    "day": 2,
+    "slug": "mat-do-trong-keo-lai-toi-uu",
+    "title": "Mật Độ Trồng Keo Lai Tối Ưu — 1.100, 1.660 Hay 2.500 Cây/Ha?",
+    "description": "So sánh hiệu quả kinh tế của các mật độ trồng keo lai 1.100, 1.660, 2.500 cây/ha. Bảng tính sản lượng gỗ, chi phí đầu tư, và thời gian thu hồi vốn theo từng mật độ.",
+    "keywords": "mật độ trồng keo lai, khoảng cách trồng, cây/ha, sản lượng gỗ, hiệu quả kinh tế",
+    "label": "Thiết kế rừng",
+    "breadcrumb": "Mật độ trồng",
+    "stats": "1.660 cây/ha:Mật độ phổ biến|3x2m:Khoảng cách chuẩn|120-180 m3/ha:Gỗ sau 7 năm|ROI 4-6x:Tỷ suất lợi nhuận"
+  },
+  {
+    "day": 3,
+    "slug": "thoi-diem-thu-hoach-keo-lai",
+    "title": "Thời Điểm Thu Hoạch Keo Lai — Bao Nhiêu Năm Thì Chặt Được?",
+    "description": "Phân tích thời điểm thu hoạch keo lai AH1 tối ưu: 5, 7 hay 10 năm. So sánh giá gỗ, sản lượng, và lợi nhuận ròng theo từng mốc thời gian. Kinh nghiệm thực tế từ nông dân.",
+    "keywords": "thu hoạch keo lai, bao nhiêu năm, giá gỗ keo, sản lượng gỗ, chu kỳ trồng",
+    "label": "Thu hoạch",
+    "breadcrumb": "Thời điểm thu hoạch",
+    "stats": "7 năm:Chu kỳ tối ưu|150-200 m3/ha:Sản lượng|1.5 triệu/m3:Giá gỗ 2025|200+ triệu/ha:Lợi nhuận ròng"
+  },
+  {
+    "day": 4,
+    "slug": "cach-chong-moi-cho-keo-lai",
+    "title": "Cách Chống Mối Cho Keo Lai — Phòng Và Trị Từ Giai Đoạn Ươm",
+    "description": "Hướng dẫn phòng trị mối hại gỗ keo lai AH1. Nhận biết dấu hiệu mối tấn công, thuốc diệt mối sinh học, và cách xử lý đất nhiễm mối trước khi trồng.",
+    "keywords": "chống mối keo lai, mối hại gỗ, thuốc diệt mối, xử lý đất nhiễm mối",
+    "label": "Bảo vệ thực vật",
+    "breadcrumb": "Chống mối",
+    "stats": "30% diện tích:Bị mối hại|Lenfos 50EC:Thuốc chống mối|3-5 năm:Hiệu lực thuốc|50g/hố:Liều xử lý"
+  },
+  {
+    "day": 5,
+    "slug": "keo-lai-ah7-dac-tinh-va-so-sanh",
+    "title": "Keo Lai AH7 — Đặc Tính, Ưu Nhược Điểm Và So Sánh Với AH1",
+    "description": "Tìm hiểu giống keo lai AH7: đặc tính sinh trưởng, khả năng chống chịu, và so sánh trực tiếp với AH1. Nên chọn giống nào cho từng vùng đất Việt Nam?",
+    "keywords": "keo lai AH7, so sánh AH1 AH7, giống keo lai, đặc tính AH7",
+    "label": "Giống cây",
+    "breadcrumb": "Keo lai AH7",
+    "stats": "AH7:Giống mới 2020|15% nhanh hơn:So với AH1|Chịu hạn tốt:Phù hợp Tây Nguyên|7-8 năm:Chu kỳ khai thác"
+  },
+  {
+    "day": 6,
+    "slug": "ki-thuat-lam-co-cho-keo-lai",
+    "title": "Kỹ Thuật Làm Cỏ Cho Keo Lai — 3 Lần Trong Năm Đầu",
+    "description": "Hướng dẫn làm cỏ xung quanh gốc keo lai AH1. Thời điểm, phương pháp, và công cụ làm cỏ hiệu quả. Chi phí nhân công và ảnh hưởng đến tăng trưởng cây.",
+    "keywords": "làm cỏ keo lai, chăm sóc keo, cuốc cỏ, thuốc trừ cỏ, nhân công",
+    "label": "Chăm sóc",
+    "breadcrumb": "Làm cỏ",
+    "stats": "3 lần/năm:Làm cỏ năm đầu|1m bán kính:Vùng cần làm sạch|2-3 triệu/ha:Chi phí mỗi lần|20-30% tăng trưởng:Nếu làm cỏ đúng"
+  },
+  {
+    "day": 7,
+    "slug": "trong-keo-lai-tren-dat-doi-troc",
+    "title": "Trồng Keo Lai Trên Đất Đồi Trọc — Kỹ Thuật Phủ Xanh Đất Bạc Màu",
+    "description": "Kinh nghiệm trồng keo lai AH1 trên đất đồi trọc, đất bạc màu. Kỹ thuật cải tạo đất, chọn giống chịu hạn, và biện pháp giữ ẩm cho cây con.",
+    "keywords": "trồng keo đồi trọc, đất bạc màu, phủ xanh đất trống, cải tạo đất rừng",
+    "label": "Cải tạo đất",
+    "breadcrumb": "Đất đồi trọc",
+    "stats": "Tỷ lệ sống:85-90%|Cắn tích:Giữ ẩm cho rễ|18-24 tháng:Đóng tán rừng|Vôi+NPK:Công thức cải tạo"
+  },
+  {
+    "day": 8,
+    "slug": "trong-xen-canh-voi-keo-lai",
+    "title": "Trồng Xen Canh Với Keo Lai — Sắn, Ngô, Đậu Trong 2 Năm Đầu",
+    "description": "Hướng dẫn trồng xen canh cây nông nghiệp (sắn, ngô, đậu phộng) với keo lai 2 năm đầu. Tăng thu nhập, giữ ẩm đất, và giảm cỏ dại.",
+    "keywords": "trồng xen keo lai, xen canh sắn, ngô, đậu phộng, tăng thu nhập",
+    "label": "Nông lâm kết hợp",
+    "breadcrumb": "Trồng xen canh",
+    "stats": "15-20 triệu/ha:Thu nhập xen canh|Sắn, ngô:Cây xen phù hợp|2 năm:Thời gian xen|Giữ ẩm:Lợi ích phụ"
+  },
+  {
+    "day": 9,
+    "slug": "chi-phi-trong-1-ha-keo-lai",
+    "title": "Chi Phí Trồng 1 Ha Keo Lai Từ A-Z — Bảng Tính Chi Tiết 2025",
+    "description": "Tổng hợp chi phí trồng 1 hecta keo lai AH1 từ khâu giâm hom đến thu hoạch. Bao gồm giống, phân bón, nhân công, vận chuyển, và bảo vệ rừng.",
+    "keywords": "chi phí trồng keo lai, 1 hecta, giá giống, phân bón, nhân công, đầu tư rừng",
+    "label": "Tài chính",
+    "breadcrumb": "Chi phí 1 ha",
+    "stats": "25-35 triệu/ha:Tổng đầu tư|600-800đ/cây:Giá giống AH1|5-6 triệu:Phân bón 2 năm|200+ triệu:Doanh thu sau 7 năm"
+  },
+  {
+    "day": 10,
+    "slug": "benh-chet-heo-keo-lai",
+    "title": "Bệnh Chết Héo Keo Lai — Nguyên Nhân, Dấu Hiệu Và Cách Cứu",
+    "description": "Nhận biết bệnh chết héo trên keo lai AH1: lá vàng, rụng lá, thân héo khô. Nguyên nhân từ nấm Ceratocystis và biện pháp phòng trị hiệu quả.",
+    "keywords": "bệnh chết héo keo lai, nấm Ceratocystis, rụng lá, lá vàng, phòng trị bệnh",
+    "label": "Bệnh cây",
+    "breadcrumb": "Bệnh chết héo",
+    "stats": "10-30% rừng:Bị nhiễm bệnh|Ceratocystis:Nấm gây bệnh|Cắt cành bệnh:Biện pháp phòng|Giống kháng:Giải pháp gốc"
+  },
+  {
+    "day": 11,
+    "slug": "cach-uom-hom-keo-lai-tai-nha",
+    "title": "Cách Ươm Hom Keo Lai Tại Nhà — Từ Chọn Đọt Đến Xuất Vườn",
+    "description": "Hướng dẫn kỹ thuật ươm hom keo lai AH1 quy mô gia đình. Từ cách chọn đọt giâm, pha dung dịch kích rễ, đến chăm sóc bầu ươm và thời gian xuất vườn.",
+    "keywords": "ươm hom keo lai, giâm hom, kích rễ, bầu ươm, xuất vườn, vườn ươm",
+    "label": "Kỹ thuật ươm",
+    "breadcrumb": "Ươm hom tại nhà",
+    "stats": "75-85%:Tỷ lệ sống|45-60 ngày:Thời gian ươm|IBA 1000ppm:Chất kích rễ|3 năm tuổi:Mẹ lấy hom"
+  },
+  {
+    "day": 12,
+    "slug": "gia-go-keo-lai-2025",
+    "title": "Giá Gỗ Keo Lai 2025 — Cập Nhật Giá Mua Theo Từng Vùng",
+    "description": "Bảng giá gỗ keo lai cập nhật 2025 theo từng vùng miền. Giá gỗ bao, gỗ cuộn, gỗ dán. Xu hướng giá và dự báo 2026. Kinh nghiệm bán gỗ được giá cao.",
+    "keywords": "giá gỗ keo 2025, giá gỗ keo lai, gỗ bao, gỗ dán, giá mua gỗ",
+    "label": "Thị trường",
+    "breadcrumb": "Giá gỗ 2025",
+    "stats": "1.2-1.8 triệu/m3:Giá gỗ cuộn|2.0-2.5 triệu/m3:Gỗ bao|Tăng 5-8%/năm:Xu hướng giá|Sản Đồng Nai:Giá cao nhất"
+  },
+  {
+    "day": 13,
+    "slug": "ki-thuat-trong-keo-lai-mua-kho",
+    "title": "Kỹ Thuật Trồng Keo Lai Mùa Khô — Có Nên Trồng Không?",
+    "description": "Phân tích rủi ro và lợi thế khi trồng keo lai vào mùa khô. Kỹ thuật tưới nước, giữ ẩm, và biện pháp tăng tỷ lệ sống cho cây con trong điều kiện hạn.",
+    "keywords": "trồng keo mùa khô, tưới nước keo lai, giữ ẩm, tỷ lệ sống, hạn hán",
+    "label": "Kỹ thuật trồng",
+    "breadcrumb": "Trồng mùa khô",
+    "stats": "50-60%:Tỷ lệ sống mùa khô|3-5 lít/cây/tuần:Nước tưới|Tước cạn:Giảm thoát hơi|Mùa mưa:Thời điểm lý tưởng"
+  },
+  {
+    "day": 14,
+    "slug": "bang-gia-cay-giong-keo-lai-2025",
+    "title": "Bảng Giá Cây Giống Keo Lai AH1 Toàn Quốc — Cập Nhật 2025",
+    "description": "Tổng hợp bảng giá cây giống keo lai AH1 tại các vườn ươm uy tín. So sánh giá theo vùng, số lượng mua, và chất lượng giống. Lưu ý khi chọn nhà cung cấp.",
+    "keywords": "giá cây giống keo lai, mua giống keo, vườn ươm, AH1, bảng giá 2025",
+    "label": "Giá giống",
+    "breadcrumb": "Bảng giá giống 2025",
+    "stats": "600-900đ/cây:Giá lẻ|500-700đ/cây:Giá sỉ từ 5.000|25-30cm:Chiều cao xuất vườn|FSC/MoA:Chứng chỉ cần có"
+  },
+  {
+    "day": 15,
+    "slug": "rung-trong-keo-lai-va-chung-chi-fsc",
+    "title": "Rừng Trồng Keo Lai Và Chứng Chỉ FSC — Lợi Ích Và Quy Trình",
+    "description": "Tìm hiểu chứng chỉ FSC cho rừng trồng keo lai. Lợi ích tăng giá gỗ 15-25%, quy trình đăng ký, chi phí, và tiêu chuẩn cần đạt. Kinh nghiệm từ các hộ rừng FSC.",
+    "keywords": "FSC keo lai, chứng chỉ rừng bền vững, tăng giá gỗ, quy trình FSC",
+    "label": "Chứng chỉ",
+    "breadcrumb": "Chứng chỉ FSC",
+    "stats": "15-25%:Tăng giá gỗ FSC|5 năm:Thời gian cấp|10-15 triệu/ha:Chi phí đăng ký|200+ ha:Diện tích tối thiểu"
+  },
+  {
+    "day": 16,
+    "slug": "keo-lai-chong-gio-bao",
+    "title": "Keo Lai Chống Gió Bão — Biện Pháp Giảm Thiệt Hại Do Bão",
+    "description": "Hướng dẫn phòng chống bão cho rừng keo lai. Kỹ thuật trồng chống gió, tỉa cành giảm tán, và biện pháp phòng hộ. Kinh nghiệm từ các tỉnh miền Trung.",
+    "keywords": "keo lai chống bão, gió bão, đổ gãy, phòng hộ rừng, tỉa cành",
+    "label": "Phòng hộ",
+    "breadcrumb": "Chống gió bão",
+    "stats": "30-50% rừng:Bị hại do bão|Tỉa cành:Giảm tán 40%|Đai rừng phòng hộ:3-5 hàng|Mật độ thấp:Giảm đổ gãy"
+  },
+  {
+    "day": 17,
+    "slug": "phan-biet-keo-lai-that-gia",
+    "title": "Phân Biệt Keo Lai AH1 Thật Và Giả — 5 Dấu Hiệu Nhận Biết",
+    "description": "Cách nhận biết cây giống keo lai AH1 thật và giả. 5 dấu hiệu từ lá, dáng thân, màu lá, rễ và giấy chứng nhận. Bảo vệ quyền lợi người mua giống.",
+    "keywords": "phân biệt keo lai thật giả, giống giả, AH1 chính hãng, chống hàng giả",
+    "label": "Kinh nghiệm",
+    "breadcrumb": "Phân biệt thật giả",
+    "stats": "20-30%:Giống giả trên thị trường|Lá hình mác:AH1 thật|Rễ trắng khỏe:Dấu hiệu tốt|Xuất xứ rõ ràng:Yếu tố quan trọng"
+  },
+  {
+    "day": 18,
+    "slug": "nuoi-ong-duoi-tan-keo-lai",
+    "title": "Nuôi Ong Dưới Tán Keo Lai — Thu Nhập Thêm 50-70 Triệu/Năm",
+    "description": "Mô hình nuôi ong lấy mật dưới tán rừng keo lai. Chi phí đầu tư, sản lượng mật, và kinh nghiệm từ các hộ nuôi ong thành công tại Đồng Nai và Bình Định.",
+    "keywords": "nuôi ong keo lai, mật ong hoa keo, thu nhập phụ, nông lâm kết hợp",
+    "label": "Thu nhập phụ",
+    "breadcrumb": "Nuôi ong",
+    "stats": "50-70 triệu/năm:Thu nhập thêm|30-50 tổ ong:Quy mô gia đình|Hoa keo:Nguồn mật chính|3 năm keo:Bắt đầu nuôi được"
+  },
+  {
+    "day": 19,
+    "slug": "he-thong-tuoi-nho-giot-vuon-uom",
+    "title": "Hệ Thống Tưới Nhỏ Giọt Cho Vườn Ươm Keo Lai — Tiết Kiệm 60% Nước",
+    "description": "Thiết kế và lắp đặt hệ thống tưới nhỏ giọt cho vườn ươm keo lai. Chi phí, thiết bị cần thiết, và so sánh với tưới phun sương truyền thống.",
+    "keywords": "tưới nhỏ giọt, vườn ươm, tiết kiệm nước, hệ thống tưới, keo lai",
+    "label": "Công nghệ",
+    "breadcrumb": "Tưới nhỏ giọt",
+    "stats": "60%:Tiết kiệm nước|5-8 triệu:Chi phí lắp đặt|Tự động:Van điện từ hẹn giờ|Tỷ lệ sống 95%:Nhờ tưới đều"
+  },
+  {
+    "day": 20,
+    "slug": "keo-lai-va-bien-doi-khi-hau",
+    "title": "Keo Lai Và Biến Đổi Khí Hậu — Tăng Trưởng Xanh Từ Trồng Rừng",
+    "description": "Vai trò của rừng keo lai trong giảm phát thải carbon và chống biến đổi khí hậu. Tính toán lượng CO2 hấp thụ, và cơ hội từ thị trường tín chỉ carbon.",
+    "keywords": "keo lai carbon, biến đổi khí hậu, tín chỉ carbon, trồng rừng giảm phát thải",
+    "label": "Môi trường",
+    "breadcrumb": "Biến đổi khí hậu",
+    "stats": "100-150 tấn CO2/ha:Hấp thụ 7 năm|$5-15/tấn:Giá tín chỉ carbon|2030:Mục tiêu Net Zero VN|1 triệu ha:Diện tích keo VN"
+  },
+  {
+    "day": 21,
+    "slug": "kinh-nghiem-trong-keo-lai-dong-nai",
+    "title": "Kinh Nghiệm Trồng Keo Lai Tại Đồng Nai — Bài Học Từ 10 Năm",
+    "description": "Tổng kết kinh nghiệm 10 năm trồng keo lai AH1 tại Đồng Nai. Bài học về chọn giống, chọn đất, thời vụ, và những sai lầm cần tránh từ các hộ nông dân.",
+    "keywords": "trồng keo Đồng Nai, kinh nghiệm, bài học, hộ nông dân, 10 năm trồng rừng",
+    "label": "Kinh nghiệm",
+    "breadcrumb": "Kinh nghiệm Đồng Nai",
+    "stats": "10 năm:Kinh nghiệm tích lũy|180 m3/ha:Sản lượng tốt nhất|Đất đỏ bazan:Phù hợp nhất|Mùa 5-7:Trồng lý tưởng"
+  },
+  {
+    "day": 22,
+    "slug": "cach-lam-dat-bac-thang-trong-keo",
+    "title": "Cách Làm Đất Bậc Thang Trồng Keo Lai Trên Đồi Dốc",
+    "description": "Kỹ thuật làm đất bậc thang để trồng keo lai trên đất đồi dốc trên 20 độ. Chống xói mòn, giữ nước, và tăng hiệu quả sinh trưởng cây.",
+    "keywords": "đất bậc thang, đồi dốc, chống xói mòn, giữ nước, kỹ thuật đất",
+    "label": "Kỹ thuật đất",
+    "breadcrumb": "Đất bậc thang",
+    "stats": "20+ độ:Đồi dốc cần làm bậc|80% giảm:Xói mòn đất|30% tăng:Giữ ẩm cho cây|1.5m:Bề rộng bậc thang"
+  },
+  {
+    "day": 23,
+    "slug": "go-keo-lai-dung-lam-gi",
+    "title": "Gỗ Keo Lai Dùng Làm Gì — 7 Ứng Dụng Từ Gỗ Bao Đến Sàn Nhà",
+    "description": "Tìm hiểu 7 ứng dụng của gỗ keo lai: làm giấy, gỗ dán, viên nén, pallet, sàn gỗ, đồ nội thất, và than hoạt tính. Giá trị của từng loại sản phẩm.",
+    "keywords": "gỗ keo dùng làm gì, ứng dụng gỗ keo, gỗ dán, gỗ bao, viên nén, đồ gỗ",
+    "label": "Giá trị gỗ",
+    "breadcrumb": "Ứng dụng gỗ keo",
+    "stats": "7 ứng dụng:Gỗ bao đến sàn nhà|2.0-3.5 triệu/m3:Gỗ dán giá trị cao|Xuất khẩu 80%:Gỗ keo VN|Châu Âu, Nhật:Thị trường chính"
+  },
+  {
+    "day": 24,
+    "slug": "vay-von-trong-rung-keo-lai",
+    "title": "Vay Vốn Trồng Rừng Keo Lai — Chính Sách Hỗ Trợ Từ Nhà Nước",
+    "description": "Tổng hợp các chính sách vay vốn ưu đãi cho trồng rừng keo lai. Chương trình 30a, vay tín dụng xanh, và hỗ trợ từ quỹ bảo vệ phát triển rừng.",
+    "keywords": "vay vốn trồng rừng, chính sách hỗ trợ, tín dụng xanh, quỹ bảo vệ rừng",
+    "label": "Tài chính",
+    "breadcrumb": "Vay vốn trồng rừng",
+    "stats": "50 triệu/ha:Vay ưu đãi|6.6%/năm:Lãi suất thấp|7-10 năm:Kỳ hạn vay|NHCSXH:Ngân hàng cho vay"
+  },
+  {
+    "day": 25,
+    "slug": "trong-keo-lai-ket-hop-chan-nuoi",
+    "title": "Trồng Keo Lai Kết Hợp Chăn Nuôi — Mô Hình Nông Lâm Tổng Hợp",
+    "description": "Mô hình trồng keo lai kết hợp chăn nuôi gia súc (bò, dê) dưới tán rừng. Lợi ích kép: phân bón tự nhiên và thu nhập ổn định từ chăn nuôi.",
+    "keywords": "nông lâm tổng hợp, chăn nuôi dưới rừng, bò keo, dê keo, phân tự nhiên",
+    "label": "Nông lâm kết hợp",
+    "breadcrumb": "Keo và chăn nuôi",
+    "stats": "5-8 bò/ha:Số lượng hợp lý|30 triệu/năm:Thu nhập chăn nuôi|Phân hữu cơ:Bón cho keo|3 năm keo:Bắt đầu thả nuôi"
+  },
+  {
+    "day": 26,
+    "slug": "benh-ri-sat-tren-la-keo-lai",
+    "title": "Bệnh Rỉ Sắt Trên Lá Keo Lai — Cách Nhận Biết Và Điều Trị",
+    "description": "Nhận biết bệnh rỉ sắt do nấm Atelocauda trên lá keo lai. Triệu chứng, điều kiện phát sinh, và các biện pháp phòng trị hiệu quả bằng thuốc gốc đồng.",
+    "keywords": "bệnh rỉ sắt keo lai, nấm Atelocauda, lá vàng, thuốc gốc đồng, phòng trị",
+    "label": "Bệnh cây",
+    "breadcrumb": "Bệnh rỉ sắt",
+    "stats": "Atelocauda:Nấm gây bệnh|Lá vàng đốm:Triệu chứng|Bordeaux 1%:Thuốc phòng|Mùa mưa:Phát sinh nhiều"
+  },
+  {
+    "day": 27,
+    "slug": "kinh-nghiem-ban-go-keo-duoc-gia",
+    "title": "Kinh Nghiệm Bán Gỗ Keo Được Giá Cao — 5 Mẹo Từ Nông Dân",
+    "description": "5 mẹo bán gỗ keo lai được giá cao từ kinh nghiệm thực tế. Từ thời điểm bán, cách đo lường gỗ, đến đàm phán với thương lái và hợp tác xã.",
+    "keywords": "bán gỗ keo, giá cao, thương lái, đo lường gỗ, kinh nghiệm bán gỗ",
+    "label": "Thị trường",
+    "breadcrumb": "Bán gỗ được giá",
+    "stats": "15-20% chênh:Giá bán đúng thời điểm|Đo m3 chính xác:Tránh thất thoát|Hợp tác xã:Bán giá tốt hơn|Mùa khô:Thời điểm bán lý tưởng"
+  },
+  {
+    "day": 28,
+    "slug": "trong-keo-lai-o-tay-nguyen",
+    "title": "Trồng Keo Lai Ở Tây Nguyên — Đất Đỏ Bazan, Lợi Thế Và Thách Thức",
+    "description": "Hướng dẫn trồng keo lai AH1 trên đất đỏ bazan Tây Nguyên. Lợi thế về đất, khí hậu, và những thách thức từ hạn hán và gió Tây khô nóng.",
+    "keywords": "keo lai Tây Nguyên, đất đỏ bazan, Gia Lai, Kon Tum, hạn hán, gió Tây",
+    "label": "Vùng miền",
+    "breadcrumb": "Trồng ở Tây Nguyên",
+    "stats": "Đất đỏ bazan:Lý tưởng cho keo|200 m3/ha:Sản lượng tiềm năng|5-6 tháng khô:Thách thức chính|Giống AH7:Chịu hạn tốt"
+  },
+  {
+    "day": 29,
+    "slug": "phong-chay-chua-chay-rung-keo",
+    "title": "Phòng Cháy Chữa Cháy Rừng Keo Lai — Kế Hoạch Và Biện Pháp",
+    "description": "Kế hoạch phòng cháy chữa cháy rừng keo lai. Làm đường băng cản lửa, tổ đội PCCC, và các biện pháp phòng cháy hiệu quả trong mùa khô.",
+    "keywords": "phòng cháy rừng keo, chữa cháy, đường băng cản lửa, PCCC rừng, mùa khô",
+    "label": "Bảo vệ rừng",
+    "breadcrumb": "Phòng cháy",
+    "stats": "Mùa khô:Nguy cơ cao nhất|10m:Đường băng cản lửa|2 lần/năm:Dọn cỏ khô|119:Số điện thoại PCCC"
+  },
+  {
+    "day": 30,
+    "slug": "xu-huong-trong-rung-2025-2030",
+    "title": "Xu Hướng Trồng Rừng Keo Lai 2025-2030 — Gỗ Lớn, FSC Và Carbon",
+    "description": "Dự báo xu hướng ngành trồng rừng keo lai 2025-2030. Chuyển dịch sang gỗ lớn, chứng chỉ FSC, và cơ hội từ thị trường tín chỉ carbon toàn cầu.",
+    "keywords": "xu hướng trồng rừng 2025, gỗ lớn, FSC, carbon, tương lai keo lai",
+    "label": "Xu hướng",
+    "breadcrumb": "Xu hướng 2025-2030",
+    "stats": "Gỗ lớn:Xu hướng chính|FSC:Bắt buộc để xuất khẩu|$5-15/tấn CO2:Tín chỉ carbon|2030:Mục tiêu 1 triệu ha"
+  }
+]

@@ -1,0 +1,22 @@
+# KeoLai Giâm Hom - Robots.txt
+# https://keolaigiamhom.vn
+
+User-agent: *
+Allow: /
+
+# Sitemap
+Sitemap: https://keolaigiamhom.vn/sitemap.xml
+
+# Disallow admin/API paths
+Disallow: /api/
+Disallow: /_next/
+Disallow: /404
+
+# Allow search engines to crawl all content
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 1
+
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 2
