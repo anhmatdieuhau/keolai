@@ -3577,7 +3577,7 @@ exports.contentAnalytics = functions.https.onRequest(
         if (response.rows && response.rows.length > 0) {
           ga4Stats.views = parseInt(response.rows[0].metricValues[0].value, 10);
           ga4Stats.users = parseInt(response.rows[0].metricValues[1].value, 10);
-          ga4Stats.avgTime = \`\${Math.round(parseFloat(response.rows[0].metricValues[2].value))}s\`;
+          ga4Stats.avgTime = `${Math.round(parseFloat(response.rows[0].metricValues[2].value))}s`;
         }
       } else {
         // Placeholder data if GA4 is not configured
@@ -3587,7 +3587,7 @@ exports.contentAnalytics = functions.https.onRequest(
 
       // Count leads from Firestore
       const leadsSnap = await db.collection('leads')
-        .where('source', '==', \`article_cta_\${slug}\`)
+        .where('source', 'in', [`article_cta_${slug}`, `exit_popup_${slug}`, slug])
         .get();
       const leadCount = leadsSnap.size;
 
