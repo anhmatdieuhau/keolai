@@ -1,0 +1,68 @@
+{
+  "firestore": {
+    "rules": "firestore.rules"
+  },
+  "functions": {
+    "source": "functions"
+  },
+  "hosting": {
+    "public": "keolai-next/out",
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "headers": [
+      {
+        "source": "**",
+        "headers": [
+          { "key": "X-Content-Type-Options", "value": "nosniff" },
+          { "key": "X-Frame-Options", "value": "DENY" },
+          { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+          { "key": "Permissions-Policy", "value": "camera=(), microphone=(), geolocation=()" },
+          { "key": "X-XSS-Protection", "value": "1; mode=block" },
+          {
+            "key": "Content-Security-Policy",
+            "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com https://www.google-analytics.com https://www.clarity.ms; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' https://lh3.googleusercontent.com https://upload.wikimedia.org data:; frame-src https://www.google.com; connect-src 'self' https://www.google-analytics.com https://us-central1-keolai-63ec1.cloudfunctions.net https://submitlead-tlme4riglq-uc.a.run.app https://www.clarity.ms;"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(jpg|jpeg|gif|png|webp|svg)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=31536000, immutable"
+          }
+        ]
+      },
+      {
+        "source": "**/*.@(css|js)",
+        "headers": [
+          {
+            "key": "Cache-Control",
+            "value": "max-age=86400"
+          }
+        ]
+      }
+    ],
+    "rewrites": [
+      {
+        "source": "/sitemap.xml",
+        "function": {
+          "functionId": "serveSitemap",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "/articles/**",
+        "function": {
+          "functionId": "serveArticle",
+          "region": "us-central1"
+        }
+      }
+    ],
+    "cleanUrls": true,
+    "trailingSlash": true
+  }
+}

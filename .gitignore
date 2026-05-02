@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+functions/node_modules/
+keolai-next/node_modules/
+
+# Build output
+keolai-next/out/
+keolai-next/.next/
+
+# Firebase cache
+.firebase/
+
+# Environment & secrets
+.env
+.env.local
+.env*.local
+firebase-ci-key.json
+*-service-account-key.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Archives
+*.zip
+
+# Embedded repos (don't track as submodules)
+everything-claude-code/

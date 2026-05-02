@@ -1,0 +1,21 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Articles: public read (served by Cloud Functions), no client write
+    match /articles/{articleId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Topics: only server (Admin SDK) can access — no client access
+    match /topics/{topicId} {
+      allow read, write: if false;
+    }
+
+    // Default: deny everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
