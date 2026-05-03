@@ -628,7 +628,7 @@ Yêu cầu:
 Trả về nội dung bài viết thuần túy (không có tiêu đề ở đầu).`;
 
       const geminiRes = await fetch(
-        `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.0-flash-lite:generateContent?key=${apiKey}`,
+        `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1147,7 +1147,7 @@ Trả về CHỈNH bài đăng, không có giải thích.`;
 
       const apiKey = vertexApiKey.value();
       const geminiRes = await fetch(
-        `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.0-flash-lite:generateContent?key=${apiKey}`,
+        `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1280,7 +1280,7 @@ Trả lời ngắn gọn, bullets, tiếng Việt.`;
       let aiSummary = '';
       try {
         const geminiRes = await fetch(
-          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.0-flash-lite:generateContent?key=${apiKey}`,
+          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1574,7 +1574,7 @@ Tone: urgency + FOMO. CTA: gọi ngay 0907.282.960.`,
 
   try {
     const geminiRes = await fetch(
-      `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.0-flash-lite:generateContent?key=${apiKey}`,
+      `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
       {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -1712,7 +1712,7 @@ Trả về bài viết thuần túy.`;
 
       try {
         const geminiRes = await fetch(
-          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.0-flash-lite:generateContent?key=${apiKey}`,
+          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1987,7 +1987,7 @@ Trả về JSON array, KHÔNG có markdown block. Ví dụ:
 [{"title":"...","slug":"...","keywords":"...","description":"...","priority":8,"label":"Kỹ thuật"}]`;
 
       const geminiRes = await fetch(
-        `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.0-flash-lite:generateContent?key=${apiKey}`,
+        `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2154,7 +2154,7 @@ CHỈ trả về nội dung email, không có subject line.`;
 
       try {
         const geminiRes = await fetch(
-          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.0-flash-lite:generateContent?key=${apiKey}`,
+          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2471,7 +2471,7 @@ Trả về nội dung bài đăng thuần túy.`;
 
       try {
         const geminiRes = await fetch(
-          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.0-flash-lite:generateContent?key=${apiKey}`,
+          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
