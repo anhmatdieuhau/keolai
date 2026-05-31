@@ -45,6 +45,7 @@ const organizationSchema = {
     "https://www.facebook.com/profile.php?id=100063555342233",
     "https://zalo.me/0907282960",
     "https://www.google.com/maps/place/C%C3%A2y+gi%E1%BB%91ng+Ng%E1%BB%8Dc+S%C6%A1n/@10.9387712,106.9964505,19.13z",
+    "https://www.google.com/search?q=V%C6%AF%E1%BB%9CN+%C6%AF%C6%A0M+C%C3%82Y+GI%E1%BB%90NG+NG%E1%BB%8CC+S%C6%A0N",
   ],
 };
 
