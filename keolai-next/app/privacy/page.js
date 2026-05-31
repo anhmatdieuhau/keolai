@@ -4,6 +4,7 @@ export const metadata = {
   title: "Chính sách bảo mật",
   description: "Chính sách bảo mật và quyền riêng tư của Vườn Ươm Cây Giống Ngọc Sơn — keolaigiamhom.vn",
   robots: { index: true, follow: true },
+  alternates: { canonical: "https://keolaigiamhom.vn/privacy" },
 };
 
 export default function PrivacyPage() {

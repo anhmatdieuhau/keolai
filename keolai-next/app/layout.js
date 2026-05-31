@@ -24,6 +24,22 @@ export const metadata = {
     locale: "vi_VN",
     type: "website",
     siteName: "Keo Lai Xanh",
+    title: "Keo Lai Giâm Hom — Giống Cây Lâm Nghiệp Chất Lượng Cao | Keo Lai Xanh",
+    description: "Vườn ươm chuyên giâm đọt Keo lai AH1 — ươm 2-3 tháng, hệ thống phun sương tự động, tỷ lệ sống trên 95%. Giao cây tận vườn toàn quốc.",
+    images: [
+      {
+        url: "https://keolaigiamhom.vn/images/og-default.jpg",
+        width: 1200,
+        height: 630,
+        alt: "Vườn ươm Keo Lai Xanh — giâm hom keo lai AH1",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Keo Lai Giâm Hom — Giống Cây Lâm Nghiệp Chất Lượng Cao | Keo Lai Xanh",
+    description: "Vườn ươm chuyên giâm đọt Keo lai AH1 — ươm 2-3 tháng, hệ thống phun sương tự động, tỷ lệ sống trên 95%. Giao cây tận vườn toàn quốc.",
+    images: ["https://keolaigiamhom.vn/images/og-default.jpg"],
   },
   robots: { index: true, follow: true },
   alternates: { canonical: "https://keolaigiamhom.vn" },
