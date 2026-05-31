@@ -54,7 +54,7 @@ const productSchema = {
   "@type": "Product",
   name: "Cây giống Keo lai giâm hom AH1",
   description:
-    "Cây giống keo lai AH1 giâm đọt, cao 25–35cm, đường kính thân 3–5mm, tỷ lệ sống trên 95%, có kiểm định nguồn gốc.",
+    "Cây giống keo lai AH1 giâm đọt, cao 25–35cm, đường kính thân 3–5mm, tỷ lệ sống trên 95%, nguồn gốc cây mẹ rõ ràng.",
   brand: { "@type": "Brand", name: "Keo Lai Xanh" },
   category: "Giống cây lâm nghiệp",
   offers: {
@@ -392,7 +392,7 @@ export default function Home() {
               <div className="spec-row" style={{ flexDirection: "column", textAlign: "center", padding: "24px 16px" }}>
                 <span style={{ fontSize: "2.5rem", marginBottom: "8px" }}>2–3</span>
                 <span className="spec-label" style={{ fontWeight: 600 }}>Tháng ươm chuẩn</span>
-                <span style={{ fontSize: "13px", color: "#666" }}>Đạt chuẩn xuất vườn, có kiểm định nguồn gốc</span>
+                <span style={{ fontSize: "13px", color: "#666" }}>Đạt chuẩn xuất vườn, theo quy trình chuẩn</span>
               </div>
             </div>
             <div style={{ display: "flex", justifyContent: "center", gap: "24px", marginTop: "32px", flexWrap: "wrap" }}>
@@ -400,7 +400,7 @@ export default function Home() {
                 <span>🚚</span> Giao cây tận vườn toàn quốc
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f0fdf4", color: "#166534", padding: "10px 18px", borderRadius: "100px", fontWeight: 600, fontSize: "14px" }}>
-                <span>📋</span> Kiểm định nguồn gốc cây mẹ
+                <span>📋</span> Nguồn gốc cây mẹ rõ ràng
               </div>
               <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f0fdf4", color: "#166534", padding: "10px 18px", borderRadius: "100px", fontWeight: 600, fontSize: "14px" }}>
                 <span>🌱</span> Cam kết đổi cây lỗi
