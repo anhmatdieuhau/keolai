@@ -63,7 +63,7 @@ XUẤT VƯỜN → Giao khách hàng
 1. **Giống AH1 chuẩn** — dòng vô tính được Bộ NN&PTNT công nhận
 2. **Hệ thống phun sương tự động** — kiểm soát ẩm độ chính xác, tỷ lệ ra rễ cao
 3. **Quy mô sản xuất lớn** — đáp ứng được đơn hàng từ vài vạn đến cả triệu cây
-4. **Vị trí Miền Trung** — thuận lợi giao hàng Bắc-Nam và xuất khẩu qua cửa khẩu
+4. **Vị trí Đồng Nai** — thuận lợi giao hàng toàn quốc, gần cao tốc Bắc-Nam
 
 ---
 
@@ -82,7 +82,7 @@ XUẤT VƯỜN → Giao khách hàng
 
 ## Kênh bán hàng hiện tại
 
-- **Website**: keolai-63ec1.web.app (lead generation)
-- **Điện thoại/Zalo**: 0373 850 884 (kênh chính, tư vấn trực tiếp)
+- **Website**: keolaigiamhom.vn (lead generation)
+- **Điện thoại/Zalo**: 0907 282 960 (kênh chính, tư vấn trực tiếp)
 - **Quan hệ trực tiếp**: đối tác cũ, giới thiệu trong ngành
 - **Xuất khẩu** (đang phát triển): qua đối tác thương mại, cửa khẩu biên giới

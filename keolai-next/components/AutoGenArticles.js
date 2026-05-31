@@ -47,33 +47,36 @@ export default function AutoGenArticles({ staticArticles = [] }) {
       <div className="knowledge-grid">
         {visible.map((a) =>
           a.type === 'static' ? (
-            <a key={a.slug} href={`/articles/${a.slug}`} className="knowledge-card" style={{ textDecoration: 'none', color: 'inherit' }}>
-              <div className="knowledge-img">
-                <img src={a.image} alt={a.title} loading="lazy" />
-              </div>
-              <h3>{a.title}</h3>
-              <p>{a.description}</p>
-            </a>
+            <article key={a.slug}>
+              <a href={`/articles/${a.slug}`} className="knowledge-card" style={{ textDecoration: 'none', color: 'inherit' }}>
+                <div className="knowledge-img">
+                  <img src={a.image} alt={a.title} loading="lazy" />
+                </div>
+                <h3>{a.title}</h3>
+                <p>{a.description}</p>
+              </a>
+            </article>
           ) : (
-            <a
-              key={a.slug}
-              href={a.url}
-              className="knowledge-card"
-              style={{ textDecoration: 'none', color: 'inherit' }}
-            >
-              <div className="knowledge-img" style={{ background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
-                <span style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 600, textAlign: 'center', lineHeight: 1.4 }}>
-                  {a.title.split('—')[0]?.trim() || a.title}
-                </span>
-              </div>
-              <h3>{a.title}</h3>
-              <p>{a.description}</p>
-              {a.publishedAt && (
-                <span className="article-date">
-                  {new Date(a.publishedAt).toLocaleDateString('vi-VN')}
-                </span>
-              )}
-            </a>
+            <article key={a.slug}>
+              <a
+                href={a.url}
+                className="knowledge-card"
+                style={{ textDecoration: 'none', color: 'inherit' }}
+              >
+                <div className="knowledge-img" style={{ background: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '1.5rem' }}>
+                  <span style={{ color: '#fff', fontSize: '1.1rem', fontWeight: 600, textAlign: 'center', lineHeight: 1.4 }}>
+                    {a.title.split('—')[0]?.trim() || a.title}
+                  </span>
+                </div>
+                <h3>{a.title}</h3>
+                <p>{a.description}</p>
+                {a.publishedAt && (
+                  <span className="article-date">
+                    {new Date(a.publishedAt).toLocaleDateString('vi-VN')}
+                  </span>
+                )}
+              </a>
+            </article>
           )
         )}
         {loading && (

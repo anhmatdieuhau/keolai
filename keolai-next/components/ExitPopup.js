@@ -92,8 +92,8 @@ export default function ExitPopup() {
         </div>
         
         <form ref={formRef} onSubmit={handleSubmit} className="exit-popup-form">
-          <input type="text" name="name" placeholder="Họ và tên" required />
-          <input type="tel" name="phone" placeholder="Số điện thoại (Zalo)" pattern="[0-9]{9,11}" required inputMode="numeric" />
+          <input type="text" name="name" placeholder="Họ và tên" aria-label="Họ và tên" required />
+          <input type="tel" name="phone" placeholder="Số điện thoại (Zalo)" aria-label="Số điện thoại (Zalo)" pattern="[0-9]{9,11}" required inputMode="numeric" />
           
           <button type="submit" className="btn btn-submit" disabled={status === "loading"}>
             {status === "loading" ? "Đang gửi..." : "NHẬN BÁO GIÁ NGAY"}

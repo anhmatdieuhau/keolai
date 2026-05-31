@@ -6,126 +6,65 @@ import ScrollReveal from "@/components/ScrollReveal";
 import { getAllArticles } from "@/lib/articles";
 import Script from "next/script";
 
-// JSON-LD Schemas for SEO
+// JSON-LD Schemas for AI Search Visibility (per Google May 2026 guidelines)
 const organizationSchema = {
   "@context": "https://schema.org",
-  "@type": "Organization",
-  name: "Vườn Ươm Cây Giống Ngọc Sơn",
-  alternateName: "Keo Lai Xanh",
-  url: "https://keolaigiamhom.vn",
+  "@type": ["Organization", "LocalBusiness", "GardenStore"],
+  "@id": "https://keolaigiamhom.vn/#business",
+  name: "Keo Lai Xanh",
+  legalName: "Vườn Ươm Cây Giống Ngọc Sơn",
+  url: "https://keolaigiamhom.vn/",
   telephone: "+84907282960",
+  email: "dtduy46@gmail.com",
+  foundingDate: "2003",
   description:
-    "Chuyên giâm đọt và ươm giống keo lai AH1 — hệ thống phun sương tự động, quy trình ươm 2-3 tháng đạt chuẩn xuất vườn.",
+    "Vườn ươm chuyên giâm đọt keo lai AH1, ươm 2-3 tháng bằng hệ thống phun sương tự động, tỷ lệ sống trên 95%. Giao cây tận vườn toàn quốc.",
   address: {
     "@type": "PostalAddress",
-    streetAddress: "42 Ấp Quảng Phát, Xã Quảng Tiến",
+    streetAddress: "42, Ấp Quảng Phát, Xã Quảng Tiến",
     addressLocality: "Trảng Bom",
     addressRegion: "Đồng Nai",
     addressCountry: "VN",
   },
-  areaServed: { "@type": "Country", name: "VN" },
-};
-
-const localBusinessSchema = {
-  "@context": "https://schema.org",
-  "@type": "LocalBusiness",
-  name: "Vườn Ươm Cây Giống Ngọc Sơn",
-  image: "https://keolaigiamhom.vn/images/vuon-uom.jpg",
-  telephone: "+84907282960",
-  url: "https://keolaigiamhom.vn",
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: "42 Ấp Quảng Phát, Xã Quảng Tiến",
-    addressLocality: "Trảng Bom",
-    addressRegion: "Đồng Nai",
-    postalCode: "810000",
-    addressCountry: "VN",
+  geo: {
+    "@type": "GeoCoordinates",
+    latitude: 10.939003,
+    longitude: 106.996687,
   },
-  priceRange: "1.500đ - 1.800đ / cây",
+  areaServed: "VN",
   openingHoursSpecification: {
     "@type": "OpeningHoursSpecification",
     dayOfWeek: [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-      "Sunday",
+      "Monday", "Tuesday", "Wednesday", "Thursday",
+      "Friday", "Saturday", "Sunday",
     ],
     opens: "06:00",
     closes: "18:00",
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.9",
-    bestRating: "5",
-    ratingCount: "47",
-    reviewCount: "3",
-  },
+  sameAs: [
+    "https://www.facebook.com/profile.php?id=100063555342233",
+    "https://zalo.me/0907282960",
+    "https://www.google.com/maps/place/C%C3%A2y+gi%E1%BB%91ng+Ng%E1%BB%8Dc+S%C6%A1n/@10.9387712,106.9964505,19.13z",
+    "https://www.google.com/search?q=V%C6%AF%E1%BB%9CN+%C6%AF%C6%A0M+C%C3%82Y+GI%E1%BB%90NG+NG%E1%BB%8CC+S%C6%A0N",
+  ],
 };
 
 const productSchema = {
   "@context": "https://schema.org",
   "@type": "Product",
-  name: "Cây giống Keo Lai AH1 giâm hom",
+  name: "Cây giống Keo lai giâm hom AH1",
   description:
-    "Cây giống keo lai AH1 giâm đọt, ươm 2-3 tháng, hệ thống phun sương tự động, tỷ lệ sống trên 95%.",
-  image: "https://keolaigiamhom.vn/images/vuon-uom.jpg",
+    "Cây giống keo lai AH1 giâm đọt, cao 25–35cm, đường kính thân 3–5mm, tỷ lệ sống trên 95%, có kiểm định nguồn gốc.",
   brand: { "@type": "Brand", name: "Keo Lai Xanh" },
+  category: "Giống cây lâm nghiệp",
   offers: {
-    "@type": "AggregateOffer",
+    "@type": "Offer",
     priceCurrency: "VND",
-    lowPrice: "1500",
-    highPrice: "1800",
-    offerCount: "3",
+    price: "1500",
     availability: "https://schema.org/InStock",
+    seller: { "@id": "https://keolaigiamhom.vn/#business" },
+    url: "https://keolaigiamhom.vn/#pricing",
   },
-  aggregateRating: {
-    "@type": "AggregateRating",
-    ratingValue: "4.9",
-    bestRating: "5",
-    ratingCount: "47",
-    reviewCount: "3",
-  },
-  review: [
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Anh Hùng" },
-      datePublished: "2025-11-15",
-      reviewBody:
-        "Tôi đã nhập 10 vạn cây AH1 của vườn. Cây rất khoẻ, đồng đều, tỷ lệ hao hụt sau khi trồng thực tế cực thấp. Rất hài lòng với dịch vụ.",
-      reviewRating: {
-        "@type": "Rating",
-        ratingValue: "5",
-        bestRating: "5",
-      },
-    },
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Chị Mai" },
-      datePublished: "2025-12-03",
-      reviewBody:
-        "Vườn ươm làm việc rất chuyên nghiệp, giao hàng đúng hẹn dù đường vào rẫy khó đi. Cây hom đạt tiêu chuẩn, rễ khoẻ.",
-      reviewRating: {
-        "@type": "Rating",
-        ratingValue: "5",
-        bestRating: "5",
-      },
-    },
-    {
-      "@type": "Review",
-      author: { "@type": "Person", name: "Anh Tuấn" },
-      datePublished: "2026-01-20",
-      reviewBody:
-        "Giá cả cạnh tranh nhất khu vực Miền Trung. Tư vấn kỹ thuật trồng rừng rất tận tâm, không chỉ bán cây mà còn hỗ trợ quy trình.",
-      reviewRating: {
-        "@type": "Rating",
-        ratingValue: "5",
-        bestRating: "5",
-      },
-    },
-  ],
 };
 
 export default function Home() {
@@ -136,27 +75,13 @@ export default function Home() {
 
   return (
     <main>
-      {/* JSON-LD Schemas */}
-      <Script
-        id="org-schema"
+      {/* JSON-LD Schemas — server-rendered for AI search grounding */}
+      <script
         type="application/ld+json"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(organizationSchema),
-        }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(organizationSchema) }}
       />
-      <Script
-        id="local-biz-schema"
+      <script
         type="application/ld+json"
-        strategy="afterInteractive"
-        dangerouslySetInnerHTML={{
-          __html: JSON.stringify(localBusinessSchema),
-        }}
-      />
-      <Script
-        id="product-schema"
-        type="application/ld+json"
-        strategy="afterInteractive"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
       />
 
@@ -265,12 +190,14 @@ export default function Home() {
       <section className="hero" id="hero">
         <div className="hero-bg">
           <img
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwxA2cwtcgxA_DP_CY6raj4OrSSkxf1at_Jtykqx1e8qxC48oiibz1wy8vVMnUFnITKgipdpu1XF9BjkFb6uPcS1MJv55XwrfcCjrzZExYO3ezBZhhttXxtD3oV61-4AcLcnb1yAIpRko-P2DzMxe3M8fz5o1_20z_VVBT400_2rAaJlxRx3PMl6gql3j1IHwgL7EPYNLz4WGjnEXZPqH1Cmq02Bo-d6VIjLY1bKH2GU4CkYQqtKiSTErETUfZ8552HpmdZERTejA"
-            alt="Vườn keo lai giâm hom quy mô lớn"
+            src="/images/articles/keo-uom-hom.png"
+            srcSet="/images/articles/keo-uom-hom.png 1x"
+            alt="Vườn ươm keo lai giâm hom — hệ thống phun sương tự động, Đồng Nai"
             loading="eager"
             fetchPriority="high"
             decoding="sync"
           />
+          {/* TODO: Replace with real hero photo at /public/images/hero-vuon.jpg (16:9 ratio) */}
           <div className="hero-overlay" />
         </div>
         <div className="container">
@@ -314,18 +241,20 @@ export default function Home() {
             <div className="featured-article-grid">
               {featuredArticles.map((article, i) => (
                 <ScrollReveal key={article.slug} delay={i * 100}>
-                  <a
-                    href={`/articles/${article.slug}`}
-                    className="featured-article-card"
-                    style={{ textDecoration: "none", color: "inherit" }}
-                  >
-                    <div className="featured-article-number">
-                      {String(i + 1).padStart(2, "0")}
-                    </div>
-                    <h3 className="featured-article-title">{article.title}</h3>
-                    <p className="featured-article-desc">{article.description}</p>
-                    <span className="featured-article-link">Đọc hướng dẫn →</span>
-                  </a>
+                  <article>
+                    <a
+                      href={`/articles/${article.slug}`}
+                      className="featured-article-card"
+                      style={{ textDecoration: "none", color: "inherit" }}
+                    >
+                      <div className="featured-article-number">
+                        {String(i + 1).padStart(2, "0")}
+                      </div>
+                      <h3 className="featured-article-title">{article.title}</h3>
+                      <p className="featured-article-desc">{article.description}</p>
+                      <span className="featured-article-link">Đọc hướng dẫn →</span>
+                    </a>
+                  </article>
                 </ScrollReveal>
               ))}
             </div>
@@ -438,65 +367,44 @@ export default function Home() {
         </section>
       </ScrollReveal>
 
-      {/* ═══════════ TESTIMONIALS ═══════════ */}
+      {/* ═══════════ PROOF BLOCK ═══════════ */}
       <ScrollReveal>
         <section className="section bg-light" id="testimonials">
           <div className="container">
             <div style={{ textAlign: "center", marginBottom: "40px" }}>
-              <h2 className="section-title" style={{ marginBottom: "16px" }}>Khách hàng thực tế nói gì</h2>
-              <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "#f0fdf4", color: "#166534", padding: "8px 16px", borderRadius: "100px", fontWeight: "600", fontSize: "14px" }}>
-                <span>🏅</span> Đã giao hơn 500.000 cây trong năm 2026
+              <span className="section-label">VÌ SAO CHỌN CHÚNG TÔI</span>
+              <h2 className="section-title" style={{ marginBottom: "16px" }}>Vườn ươm thực — Kinh nghiệm thực</h2>
+              <p className="section-desc" style={{ maxWidth: "640px", margin: "0 auto" }}>
+                Không phải thương mại. Chúng tôi trực tiếp giâm đọt, ươm cây, và giao tận vườn trên toàn quốc.
+              </p>
+            </div>
+            <div className="specs-grid" style={{ gridTemplateColumns: "repeat(3, 1fr)" }}>
+              <div className="spec-row" style={{ flexDirection: "column", textAlign: "center", padding: "24px 16px" }}>
+                <span style={{ fontSize: "2.5rem", marginBottom: "8px" }}>2003</span>
+                <span className="spec-label" style={{ fontWeight: 600 }}>Kinh nghiệm ươm giống</span>
+                <span style={{ fontSize: "13px", color: "#666" }}>Hơn 20 năm giâm hom keo lai AH1</span>
+              </div>
+              <div className="spec-row" style={{ flexDirection: "column", textAlign: "center", padding: "24px 16px" }}>
+                <span style={{ fontSize: "2.5rem", marginBottom: "8px" }}>&gt;95%</span>
+                <span className="spec-label" style={{ fontWeight: 600 }}>Tỷ lệ sống</span>
+                <span style={{ fontSize: "13px", color: "#666" }}>Hệ thống phun sương tự động 1–2 phút/lần</span>
+              </div>
+              <div className="spec-row" style={{ flexDirection: "column", textAlign: "center", padding: "24px 16px" }}>
+                <span style={{ fontSize: "2.5rem", marginBottom: "8px" }}>2–3</span>
+                <span className="spec-label" style={{ fontWeight: 600 }}>Tháng ươm chuẩn</span>
+                <span style={{ fontSize: "13px", color: "#666" }}>Đạt chuẩn xuất vườn, có kiểm định nguồn gốc</span>
               </div>
             </div>
-            <div className="testimonial-grid">
-              {[
-                {
-                  quote: 'Tôi đã nhập 10 vạn cây AH1 của vườn. Cây rất khoẻ, đồng đều, tỷ lệ hao hụt sau khi trồng thực tế cực thấp. Rất hài lòng với dịch vụ.',
-                  name: "ANH NGUYỄN VĂN HÙNG",
-                  location: "QUẢNG NGÃI",
-                  amount: "10 vạn",
-                  years: "2023",
-                  avatar: "/images/testimonials/avatar-placeholder.svg",
-                  border: "border-primary",
-                },
-                {
-                  quote: 'Vườn ươm làm việc rất chuyên nghiệp, giao hàng đúng hẹn dù đường vào rẫy khó đi. Cây hom đạt tiêu chuẩn, rễ khoẻ.',
-                  name: "CHỊ TRẦN THỊ MAI",
-                  location: "BÌNH ĐỊNH",
-                  amount: "5 vạn",
-                  years: "2024",
-                  avatar: "/images/testimonials/avatar-placeholder.svg",
-                  border: "border-secondary",
-                },
-                {
-                  quote: 'Giá cả cạnh tranh nhất khu vực Miền Trung. Tư vấn kỹ thuật trồng rừng rất tận tâm, không chỉ bán cây mà còn hỗ trợ quy trình.',
-                  name: "ANH LÊ VĂN TUẤN",
-                  location: "PHÚ YÊN",
-                  amount: "8 vạn",
-                  years: "2025",
-                  avatar: "/images/testimonials/avatar-placeholder.svg",
-                  border: "border-tertiary",
-                },
-              ].map((t, i) => (
-                <ScrollReveal key={i} delay={i * 120}>
-                  <div className={`testimonial-card ${t.border}`}>
-                    <div className="testimonial-header" style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-                      <img src={t.avatar} alt={t.name} style={{ width: '48px', height: '48px', borderRadius: '50%', objectFit: 'cover' }} />
-                      <div className="testimonial-author-info">
-                        <span className="author-name" style={{ display: 'block', fontWeight: 'bold' }}>{t.name}</span>
-                        <span className="author-location" style={{ fontSize: '12px', color: '#666' }}>📍 {t.location}</span>
-                      </div>
-                    </div>
-                    <div className="testimonial-stars">
-                      {[...Array(5)].map((_, s) => <span key={s} className="testimonial-star">★</span>)}
-                    </div>
-                    <p className="testimonial-text">&ldquo;{t.quote}&rdquo;</p>
-                    <div className="testimonial-meta" style={{ marginTop: '12px', fontSize: '12px', color: '#166534', background: '#f0fdf4', padding: '6px 10px', borderRadius: '6px', display: 'inline-block' }}>
-                      📦 Đã mua: <strong>{t.amount} cây</strong> · 🤝 Khách từ {t.years}
-                    </div>
-                  </div>
-                </ScrollReveal>
-              ))}
+            <div style={{ display: "flex", justifyContent: "center", gap: "24px", marginTop: "32px", flexWrap: "wrap" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f0fdf4", color: "#166534", padding: "10px 18px", borderRadius: "100px", fontWeight: 600, fontSize: "14px" }}>
+                <span>🚚</span> Giao cây tận vườn toàn quốc
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f0fdf4", color: "#166534", padding: "10px 18px", borderRadius: "100px", fontWeight: 600, fontSize: "14px" }}>
+                <span>📋</span> Kiểm định nguồn gốc cây mẹ
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", background: "#f0fdf4", color: "#166534", padding: "10px 18px", borderRadius: "100px", fontWeight: 600, fontSize: "14px" }}>
+                <span>🌱</span> Cam kết đổi cây lỗi
+              </div>
             </div>
           </div>
         </section>
@@ -512,7 +420,7 @@ export default function Home() {
                 <h2 className="section-title">Kiến thức trồng rừng</h2>
               </div>
             </div>
-            <AutoGenArticles staticArticles={articles} />
+            <AutoGenArticles staticArticles={articles.slice(3)} />
           </div>
         </section>
       </ScrollReveal>

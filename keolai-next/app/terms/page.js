@@ -4,6 +4,7 @@ export const metadata = {
   title: "Điều khoản sử dụng",
   description: "Điều khoản sử dụng website Vườn Ươm Cây Giống Ngọc Sơn — keolaigiamhom.vn",
   robots: { index: true, follow: true },
+  alternates: { canonical: "https://keolaigiamhom.vn/terms" },
 };
 
 export default function TermsPage() {
