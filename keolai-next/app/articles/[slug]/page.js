@@ -46,7 +46,7 @@ export async function generateMetadata({ params }) {
     },
     other: {
       "article:published_time": article.date,
-      "article:author": "TEN_CHU_VUON",
+      "article:author": "Đặng Ngọc Sơn",
       "article:publisher": "https://keolaigiamhom.vn/",
     },
   };
@@ -127,7 +127,7 @@ export default async function ArticlePage({ params }) {
     description: article.description,
     author: {
       "@type": "Person",
-      name: "TEN_CHU_VUON", // ← Replace with real nursery owner name
+      name: "Đặng Ngọc Sơn", // ← Replace with real nursery owner name
       jobTitle: "Chủ vườn ươm — kinh nghiệm giâm hom keo lai AH1 từ 2003",
       worksFor: { "@id": "https://keolaigiamhom.vn/#business" },
     },
