@@ -44,7 +44,7 @@ const organizationSchema = {
   sameAs: [
     "https://www.facebook.com/profile.php?id=100063555342233",
     "https://zalo.me/0907282960",
-    "https://www.google.com/search?q=v%C6%B0%E1%BB%9Dn+%C6%B0%C6%A1m+c%C3%A2y+gi%E1%BB%91ng+ng%E1%BB%8Dc+s%C6%A1n",
+    "https://www.google.com/maps/place/C%C3%A2y+gi%E1%BB%91ng+Ng%E1%BB%8Dc+S%C6%A1n/@10.9387712,106.9964505,19.13z",
   ],
 };
 
