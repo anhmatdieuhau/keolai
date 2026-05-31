@@ -60,8 +60,8 @@ Mọi trang, mọi bài viết, mọi quảng cáo đều phải truyền tải 
 
 ```
 Vườn ươm: Keo Lai Xanh
-Phone/Zalo: 0373 850 884
+Phone/Zalo: 0907 282 960
 Email: dtduy46@gmail.com
-Website: keolai-63ec1.web.app
-Địa chỉ: Vườn ươm Keo Lai Xanh, Miền Trung, Việt Nam
+Website: keolaigiamhom.vn
+Địa chỉ: 42, Ấp Quảng Phát, Xã Quảng Tiến, Trảng Bom, Đồng Nai
 ```
