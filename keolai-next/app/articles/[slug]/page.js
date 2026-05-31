@@ -12,6 +12,10 @@ export async function generateMetadata({ params }) {
   const article = getArticle(slug);
   if (!article) return {};
 
+  const ogImage = article.image
+    ? `https://keolaigiamhom.vn${article.image}`
+    : "https://keolaigiamhom.vn/images/og-default.jpg";
+
   return {
     title: article.title,
     description: article.description,
@@ -22,12 +26,28 @@ export async function generateMetadata({ params }) {
       type: "article",
       url: `https://keolaigiamhom.vn/articles/${slug}`,
       locale: "vi_VN",
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: article.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: article.title,
+      description: article.description,
+      images: [ogImage],
     },
     alternates: {
       canonical: `https://keolaigiamhom.vn/articles/${slug}`,
     },
     other: {
       "article:published_time": article.date,
+      "article:author": "TEN_CHU_VUON",
+      "article:publisher": "https://keolaigiamhom.vn/",
     },
   };
 }
@@ -102,10 +122,16 @@ export default async function ArticlePage({ params }) {
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Article",
+    "@id": `https://keolaigiamhom.vn/articles/${slug}#article`,
     headline: article.title,
     description: article.description,
-    author: { "@type": "Organization", name: "Keo Lai Xanh", url: "https://keolaigiamhom.vn" },
-    publisher: { "@type": "Organization", name: "Keo Lai Xanh" },
+    author: {
+      "@type": "Person",
+      name: "TEN_CHU_VUON", // ← Replace with real nursery owner name
+      jobTitle: "Chủ vườn ươm — kinh nghiệm giâm hom keo lai AH1 từ 2003",
+      worksFor: { "@id": "https://keolaigiamhom.vn/#business" },
+    },
+    publisher: { "@id": "https://keolaigiamhom.vn/#business" },
     datePublished: article.date,
     dateModified: article.date,
     mainEntityOfPage: `https://keolaigiamhom.vn/articles/${slug}`,
@@ -122,7 +148,7 @@ export default async function ArticlePage({ params }) {
   };
 
   return (
-    <>
+    <main>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbLd) }} />
       <script dangerouslySetInnerHTML={{ __html: `
@@ -169,12 +195,12 @@ export default async function ArticlePage({ params }) {
         </div>
       )}
 
-      <main className="article-body" dangerouslySetInnerHTML={{ __html: renderBody(article.body, related) }} />
+      <div className="article-body" dangerouslySetInnerHTML={{ __html: renderBody(article.body, related) }} />
 
       <SmartCTA article={article} />
 
       {related.length > 0 && (
-        <div className="related">
+        <aside className="related">
           <h3>Bài viết liên quan</h3>
           {related.map((r) => (
             <Link key={r.slug} href={`/articles/${r.slug}`} className="related-card" aria-label={`Đọc bài viết: ${r.title}`}>
@@ -187,8 +213,8 @@ export default async function ArticlePage({ params }) {
               Tất cả bài viết
             </Link>
           </div>
-        </div>
+        </aside>
       )}
-    </>
+    </main>
   );
 }
