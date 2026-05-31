@@ -75,10 +75,11 @@ export default function SmartCTA({ article }) {
           </div>
         ) : (
           <form ref={formRef} onSubmit={handleSubmit} style={{ display: 'flex', gap: '8px', maxWidth: '400px', margin: '0 auto' }}>
-            <input 
-              type="tel" 
-              name="phone" 
-              placeholder="Nhập số điện thoại (Zalo)" 
+            <input
+              type="tel"
+              name="phone"
+              aria-label="Số điện thoại (Zalo)"
+              placeholder="Nhập số điện thoại (Zalo)"
               pattern="[0-9]{9,11}" 
               required 
               inputMode="numeric"
