@@ -205,17 +205,29 @@ exports.serveArticle = functions.https.onRequest(
 
       // Security: validate slug format (alphanumeric + hyphens only)
       if (!slug || !/^[a-z0-9-]+$/.test(slug)) {
+        logger.warn('serveArticle: rejected non-conforming slug', { slug, path: req.path });
         return res.status(404).send('Article not found');
       }
 
       const doc = await db.collection('articles').doc(slug).get();
-      if (!doc.exists || !doc.data().html) {
+      if (!doc.exists) {
+        return res.status(404).send('Article not found');
+      }
+
+      const data = doc.data();
+
+      // Phase 1 URL cleanup: doc merged into a canonical slug elsewhere — 301, don't render.
+      if (data.redirectTo) {
+        return res.redirect(301, `${SITE_URL}/articles/${data.redirectTo}/`);
+      }
+      // Phase 1 URL cleanup: doc retired in place (duplicate of a static page at the same slug).
+      if (data.retired || !data.html) {
         return res.status(404).send('Article not found');
       }
 
       res.set('Cache-Control', 'public, max-age=3600, s-maxage=86400');
       res.set('Content-Type', 'text/html; charset=utf-8');
-      return res.status(200).send(doc.data().html);
+      return res.status(200).send(data.html);
     } catch (error) {
       logger.error('Failed to serve article:', error);
       return res.status(500).send('Internal server error');
@@ -226,36 +238,50 @@ exports.serveArticle = functions.https.onRequest(
 // ═══════════════════════════════════════
 // 5. SERVE DYNAMIC SITEMAP
 // ═══════════════════════════════════════
+// Slugs statically exported by Next.js (keolai-next/content/*.mdx) — these win Firebase
+// Hosting's routing over the serveArticle rewrite, so they must NOT also appear as
+// Firestore-sourced sitemap entries (that produced the exact duplicate-URL fragmentation
+// this cleanup exists to fix). Regenerate this file if static content changes:
+//   ls keolai-next/content/*.mdx | xargs -n1 basename | sed 's/\.mdx$//' | sort
+const STATIC_ARTICLE_SLUGS = new Set(require('./static-article-slugs.json'));
+
 exports.serveSitemap = functions.https.onRequest(
   { region: 'us-central1' },
   async (req, res) => {
     try {
-      // Static pages (always in sitemap)
+      const today = new Date().toISOString().split('T')[0];
+
+      // Static pages (Next.js static export) — always in sitemap, always trailing-slash, https.
       const staticPages = [
         { loc: `${SITE_URL}/`, changefreq: 'weekly', priority: '1.0' },
-        { loc: `${SITE_URL}/articles/ky-thuat-trong-keo-lai-ah1/`, changefreq: 'monthly', priority: '0.8' },
-        { loc: `${SITE_URL}/articles/he-thong-phun-suong-vuon-uom/`, changefreq: 'monthly', priority: '0.8' },
-        { loc: `${SITE_URL}/articles/giong-keo-lai-ah1-dac-tinh/`, changefreq: 'monthly', priority: '0.8' },
-        { loc: `${SITE_URL}/articles/cach-chon-dat-trong-keo-lai/`, changefreq: 'monthly', priority: '0.8' },
-      ];
+        ...[...STATIC_ARTICLE_SLUGS].map((slug) => ({
+          loc: `${SITE_URL}/articles/${slug}/`,
+          changefreq: 'monthly',
+          priority: '0.8',
+        })),
+      ].map((p) => ({ ...p, lastmod: today }));
 
-      // Fetch all published articles from Firestore
+      // Firestore-backed articles — exclude anything that's statically shadowed (would
+      // never actually be reachable at that slug), retired in place, or merged elsewhere
+      // (redirectTo present means this slug 301s — a redirecting URL must not be in the
+      // sitemap we ask Google to crawl as canonical).
       const articlesSnap = await db.collection('articles')
         .orderBy('publishedAt', 'desc')
         .get();
 
       const dynamicPages = articlesSnap.docs
-        .filter(doc => {
-          const slug = doc.data().slug;
-          // Exclude articles already in static list
-          const staticSlugs = ['ky-thuat-trong-keo-lai-ah1', 'he-thong-phun-suong-vuon-uom', 'giong-keo-lai-ah1-dac-tinh', 'cach-chon-dat-trong-keo-lai'];
-          return slug && !staticSlugs.includes(slug);
+        .filter((doc) => {
+          const d = doc.data();
+          if (!d.slug) return false;
+          if (STATIC_ARTICLE_SLUGS.has(d.slug)) return false;
+          if (d.redirectTo || d.retired) return false;
+          return true;
         })
-        .map(doc => {
+        .map((doc) => {
           const d = doc.data();
           const publishedDate = d.publishedAt?.toDate?.()
             ? d.publishedAt.toDate().toISOString().split('T')[0]
-            : new Date().toISOString().split('T')[0];
+            : today;
           return {
             loc: `${SITE_URL}/articles/${d.slug}/`,
             lastmod: publishedDate,
@@ -264,8 +290,7 @@ exports.serveSitemap = functions.https.onRequest(
           };
         });
 
-      const today = new Date().toISOString().split('T')[0];
-      const allPages = [...staticPages.map(p => ({ ...p, lastmod: today })), ...dynamicPages];
+      const allPages = [...staticPages, ...dynamicPages];
 
       const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
