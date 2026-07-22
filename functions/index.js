@@ -1123,105 +1123,6 @@ function getDateString(daysOffset) {
 }
 
 // ═══════════════════════════════════════
-// 7. GENERATE FACEBOOK POST
-//    Takes an article slug → generates optimized FB post copy
-// ═══════════════════════════════════════
-exports.generateFacebookPost = functions.https.onRequest(
-  {
-    secrets: [vertexApiKey, appClientSecret],
-    region: 'us-central1',
-    timeoutSeconds: 120,
-    memory: '256MiB',
-    cors: true,
-  },
-  async (req, res) => {
-    try {
-      const clientSecret = req.headers['x-app-secret'];
-      if (clientSecret !== appClientSecret.value()) {
-        return res.status(403).json({ error: 'Unauthorized' });
-      }
-
-      const { slug } = req.body;
-      if (!slug) {
-        return res.status(400).json({ error: 'Missing slug parameter' });
-      }
-
-      // Fetch article from Firestore
-      const doc = await db.collection('articles').doc(slug).get();
-      if (!doc.exists) {
-        return res.status(404).json({ error: 'Article not found' });
-      }
-
-      const article = doc.data();
-      const articleText = article.html
-        ? article.html.replace(/<[^>]*>/g, '').substring(0, 2000)
-        : article.title;
-
-      const prompt = `Bạn là chuyên gia marketing nông nghiệp Việt Nam. Tạo một bài đăng Facebook (Vietnamese) quảng bá bài viết kỹ thuật lâm nghiệp.
-
-Thông tin bài viết:
-- Tiêu đề: ${article.title}
-- Nội dung tóm tắt: ${articleText.substring(0, 800)}
-- Link: ${article.url}
-
-Yêu cầu bài đăng Facebook:
-- Mở đầu bằng một câu hook gây tò mò (dùng emoji phù hợp 🌿🌱💰)
-- Nêu 3-4 điểm chính rút ra từ bài viết (dùng bullet points với emoji)
-- Kết thúc bằng CTA kêu gọi đọc bài viết và liên hệ
-- Tone: chuyên nghiệp nhưng gần gũi, phù hợp nông dân
-- Độ dài: 150-250 từ
-- Thêm 5-7 hashtag phù hợp ở cuối
-- KHÔNG dùng link trực tiếp trong bài (link sẽ được đặt ở comment)
-
-Trả về CHỈNH bài đăng, không có giải thích.`;
-
-      const apiKey = vertexApiKey.value();
-      const geminiRes = await fetch(
-        `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
-        {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.85, maxOutputTokens: 1024 },
-          }),
-        }
-      );
-
-      if (!geminiRes.ok) {
-        throw new Error(`Vertex AI error: ${geminiRes.status}`);
-      }
-
-      const geminiData = await geminiRes.json();
-      const fbPost = geminiData.candidates[0].content.parts[0].text;
-
-      // Save to Firestore for reference
-      await db.collection('social_posts').add({
-        articleSlug: slug,
-        platform: 'facebook',
-        content: fbPost,
-        articleUrl: article.url,
-        createdAt: admin.firestore.FieldValue.serverTimestamp(),
-        status: 'draft',
-      });
-
-      console.log(`📘 FB post generated for: ${article.title}`);
-
-      return res.status(200).json({
-        success: true,
-        post: fbPost,
-        articleTitle: article.title,
-        articleUrl: article.url,
-        instruction: 'Copy bài đăng → paste vào Facebook → thêm link bài viết ở comment đầu tiên',
-      });
-    } catch (error) {
-      logger.error('❌ FB post generation failed:', error);
-      return res.status(500).json({ error: error.message });
-    }
-  }
-);
-
-// ═══════════════════════════════════════
 // 8. WEEKLY ANALYTICS REPORT
 //    Triggered by Cloud Scheduler (cron: 0 8 * * 1 → Monday 8AM VN)
 //    Fetches GA4 data → AI summary → Email digest
@@ -1310,7 +1211,7 @@ Trả lời ngắn gọn, bullets, tiếng Việt.`;
       let aiSummary = '';
       try {
         const geminiRes = await fetch(
-          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2457,7 +2358,7 @@ Trả về nội dung bài đăng thuần túy.`;
 
       try {
         const geminiRes = await fetch(
-          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
