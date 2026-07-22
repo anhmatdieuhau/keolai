@@ -46,6 +46,28 @@
         ]
       }
     ],
+    "redirects": [
+      {
+        "source": "/articles/gia-go-keo-lai-2025",
+        "destination": "/articles/chi-phi-trong-1-ha-keo-lai",
+        "type": 301
+      },
+      {
+        "source": "/articles/gia-go-keo-lai-2025/",
+        "destination": "/articles/chi-phi-trong-1-ha-keo-lai/",
+        "type": 301
+      },
+      {
+        "source": "/articles/cach-xu-ly-dat-truoc-khi-trong-keo",
+        "destination": "/articles/kinh-nghiem-xu-ly-dat-truoc-khi-trong-keo-giam-hom",
+        "type": 301
+      },
+      {
+        "source": "/articles/cach-xu-ly-dat-truoc-khi-trong-keo/",
+        "destination": "/articles/kinh-nghiem-xu-ly-dat-truoc-khi-trong-keo-giam-hom/",
+        "type": 301
+      }
+    ],
     "rewrites": [
       {
         "source": "/sitemap.xml",
