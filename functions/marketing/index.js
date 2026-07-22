@@ -249,7 +249,11 @@ exports.strategistAgent = functions.onRequest(
   async (req, res) => {
     if (!isAuthorized(req)) return res.status(403).json({ error: 'Unauthorized' });
     try {
-      const claudeClient = createClaudeClient(anthropicApiKey.value());
+      // maxTokens raised well above claudeClient's 2048 default — the generation
+      // call returns up to MAX_PROPOSALS_PER_RUN full proposals (rationale +
+      // claims + proposed_change each), which truncated mid-JSON-string at the
+      // default cap during real E2E testing (SyntaxError: Unterminated string).
+      const claudeClient = createClaudeClient(anthropicApiKey.value(), { maxTokens: 8000 });
       const result = await runStrategistAgent({ db, claudeClient });
       console.log('📋 [strategistAgent]', result);
       return res.status(200).json({ success: true, ...result });

@@ -7,6 +7,8 @@
  * covered in proposalGates.test.js.
  */
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 const { runStrategistAgent, currentWeekKey, domainOf } = require('../strategist/strategistAgent');
 
 // ── minimal in-memory Firestore stub, generic nested collection/doc paths + a
@@ -291,6 +293,22 @@ const FIXED_NOW = new Date('2026-07-22T12:00:00Z'); // same week as verified_cla
     assert.strictEqual(result.skipped, 'cost_guard_exceeded');
     assert.strictEqual(claude.calls.length, 0);
     console.log('PASS: costGuard budget exceeded -> run skipped entirely, Claude never called');
+  }
+
+  // Regression guard: strategistAgent's Claude client must raise maxTokens
+  // well above the claudeClient default (2048). Found via real E2E testing —
+  // a generation call asking for up to 3 full proposals (rationale + claims +
+  // proposed_change each) truncated mid-JSON-string at the default cap
+  // ("SyntaxError: Unterminated string in JSON"), a failure mode invisible
+  // to this file's fake claudeClient (it never serializes/truncates JSON).
+  {
+    const indexSource = fs.readFileSync(path.join(__dirname, '../index.js'), 'utf8');
+    const strategistBlock = indexSource.slice(indexSource.indexOf('exports.strategistAgent'));
+    const clientLine = strategistBlock.slice(0, strategistBlock.indexOf('runStrategistAgent'));
+    const maxTokensMatch = clientLine.match(/maxTokens:\s*(\d+)/);
+    assert.ok(maxTokensMatch, 'strategistAgent must pass an explicit maxTokens to createClaudeClient');
+    assert.ok(Number(maxTokensMatch[1]) >= 4000, `maxTokens (${maxTokensMatch && maxTokensMatch[1]}) must be well above the 2048 default to avoid truncating a multi-proposal response`);
+    console.log('PASS: strategistAgent raises Claude maxTokens above the default (regression guard for real mid-JSON truncation)');
   }
 
   console.log('\nAll strategistAgent tests passed.');
