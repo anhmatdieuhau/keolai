@@ -664,7 +664,13 @@ Trả về nội dung bài viết thuần túy (không có tiêu đề ở đầ
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{ role: 'user', parts: [{ text: prompt }] }],
-            generationConfig: { temperature: 0.7, maxOutputTokens: 4096 },
+            // thinkingBudget: 0 — found via real E2E test: gemini-3.6-flash spends
+            // output tokens on internal "thinking" by default, sharing the same
+            // maxOutputTokens budget as the actual article. That silently truncated
+            // articles mid-sentence (finishReason: MAX_TOKENS) well short of the
+            // requested length. This is plain content writing, not reasoning, so
+            // thinking is disabled to give the full budget to the article itself.
+            generationConfig: { temperature: 0.7, maxOutputTokens: 4096, thinkingConfig: { thinkingBudget: 0 } },
           }),
         }
       );
@@ -1591,7 +1597,9 @@ Trả về bài viết thuần túy.`;
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ role: 'user', parts: [{ text: articlePrompt }] }],
-              generationConfig: { temperature: 0.7, maxOutputTokens: 4096 },
+              // See scheduleContentGeneration above for why thinkingBudget:0 —
+              // same model, same silent-truncation risk.
+              generationConfig: { temperature: 0.7, maxOutputTokens: 4096, thinkingConfig: { thinkingBudget: 0 } },
             }),
           }
         );
@@ -2369,7 +2377,10 @@ Trả về nội dung bài đăng thuần túy.`;
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
               contents: [{ role: 'user', parts: [{ text: summaryPrompt }] }],
-              generationConfig: { temperature: 0.7, maxOutputTokens: 512 },
+              // See scheduleContentGeneration above for why thinkingBudget:0 — same
+              // model, and an even tighter 512-token budget makes this one more
+              // likely to silently truncate (or produce nothing) without it.
+              generationConfig: { temperature: 0.7, maxOutputTokens: 512, thinkingConfig: { thinkingBudget: 0 } },
             }),
           }
         );

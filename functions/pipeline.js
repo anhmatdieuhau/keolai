@@ -650,7 +650,13 @@ Trả về nội dung BÀI VIẾT thuần túy (không tiêu đề ở đầu, k
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         contents: [{ role: 'user', parts: [{ text: articlePrompt }] }],
-                        generationConfig: { temperature: 0.7, maxOutputTokens: 6000 },
+                        // thinkingBudget: 0 — found via real E2E test on scheduleContentGeneration
+                        // (functions/index.js, same model): gemini-3.6-flash spends output tokens on
+                        // internal "thinking" by default, sharing the same maxOutputTokens budget as
+                        // the actual article, which silently truncated articles mid-sentence
+                        // (finishReason: MAX_TOKENS). Plain content writing, not reasoning — thinking
+                        // disabled so the full budget goes to the article itself.
+                        generationConfig: { temperature: 0.7, maxOutputTokens: 6000, thinkingConfig: { thinkingBudget: 0 } },
                     }),
                 }
             );
