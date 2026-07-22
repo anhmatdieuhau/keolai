@@ -1769,7 +1769,12 @@ exports.autoReplenishTopics = functions.https.onRequest(
     secrets: [vertexApiKey, gmailAppPassword, appClientSecret],
     region: 'us-central1',
     timeoutSeconds: 120,
-    memory: '256MiB',
+    // evaluateTopicNovelty()'s semantic tier re-fetches up to 500 topic_fingerprints
+    // docs (with embedding arrays) per candidate topic, once per candidate in the
+    // 10-candidate loop below — OOM'd at 256MiB during a real E2E run. Match the
+    // 512MiB already used by pipelineResearcher/pipelineOrchestrator, the other 2
+    // callers of this same shared novelty check (see lib/topic-dedup.js).
+    memory: '512MiB',
   },
   async (req, res) => {
     try {
