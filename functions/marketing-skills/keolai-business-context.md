@@ -48,4 +48,4 @@ Dùng đúng thông tin này trong mọi claim/proposal liên quan tới liên h
 
 ## Số bài viết hiện có
 
-[CẦN CẬP NHẬT LÚC TRIỂN KHAI] — đếm thật số document trong collection Firestore `articles` trước khi điền số này (xem plan Phase 3 — các ước tính trước đó ghi 2 con số khác nhau, ~35 và 58, đều là ước đoán cũ, không dùng lại nguyên văn).
+58 bài (đếm thật từ collection Firestore `articles` ngày 2026-07-22, lúc xây `strategistAgent` — không phải ước đoán).
