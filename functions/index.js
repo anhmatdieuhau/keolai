@@ -20,6 +20,10 @@ const appClientSecret = defineSecret('APP_CLIENT_SECRET');
 const vertexApiKey = defineSecret('VERTEX_API_KEY');
 const gmailAppPassword = defineSecret('GMAIL_APP_PASSWORD');
 
+const { normalizeSlug, isValidSlug } = require('./lib/slug');
+const { evaluateTopicNovelty, registerTopicFingerprint } = require('./lib/topic-dedup');
+const { embedTopicTitle } = require('./lib/embeddings');
+
 // Cloud Tasks client for PBCA experiment lifecycle
 const tasksClient = new CloudTasksClient();
 
@@ -1751,7 +1755,7 @@ Trả về bài viết thuần túy.`;
         if (geminiRes.ok) {
           const data = await geminiRes.json();
           const content = data.candidates[0].content.parts[0].text;
-          const slug = `mua-vu-${campaign.region.toLowerCase().replace(/\s+/g, '-')}-thang-${currentMonth}-${now.getFullYear()}`;
+          const slug = normalizeSlug(`mua-vu-${campaign.region}-thang-${currentMonth}-${now.getFullYear()}`);
 
           const htmlContent = markdownToHtml(content);
           const articleHtml = buildArticlePage({
@@ -1777,6 +1781,12 @@ Trả về bài viết thuần túy.`;
             publishedDate: now.toISOString().split('T')[0],
             source: 'seasonal-campaign',
             campaign: campaignId,
+          });
+
+          await registerTopicFingerprint(db, {
+            slug,
+            title: campaign.theme,
+            registeredAtValue: admin.firestore.FieldValue.serverTimestamp(),
           });
 
           results.articlesGenerated++;
@@ -2035,17 +2045,44 @@ Trả về JSON array, KHÔNG có markdown block. Ví dụ:
       topicsText = topicsText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
       const newTopics = JSON.parse(topicsText);
 
-      // Batch write to Firestore
-      const batch = db.batch();
+      // B4/B8 fix: never trust the AI-supplied slug as-is — normalize it, and fall back to
+      // deriving it from the title if the AI's own slug doesn't survive validation.
+      // B6 fix: hard novelty gate via topic_fingerprints (coarse + semantic), replacing the
+      // "existingTitles... KHÔNG ĐƯỢC trùng" soft prompt instruction that kept failing.
       let addedCount = 0;
+      let duplicateCount = 0;
+      let invalidCount = 0;
+      const addedTitles = [];
 
       for (const topic of newTopics) {
-        if (!topic.title || !topic.slug) continue;
+        if (!topic.title) continue;
 
-        const docRef = db.collection('topics').doc(topic.slug);
-        batch.set(docRef, {
+        const slug = isValidSlug(topic.slug) ? topic.slug : normalizeSlug(topic.title);
+        if (!isValidSlug(slug)) {
+          logger.warn('autoReplenishTopics: rejected topic with unsalvageable slug', { title: topic.title, aiSlug: topic.slug });
+          invalidCount++;
+          continue;
+        }
+
+        let novelty;
+        try {
+          novelty = await evaluateTopicNovelty({ title: topic.title }, db, {
+            embedFn: (text) => embedTopicTitle(text, apiKey),
+          });
+        } catch (embedErr) {
+          logger.warn('autoReplenishTopics: embedding check failed, falling back to coarse-only', { error: embedErr.message });
+          novelty = await evaluateTopicNovelty({ title: topic.title }, db);
+        }
+
+        if (novelty.status === 'duplicate') {
+          console.log(`⏭️  Skipped duplicate topic "${topic.title}" (matches ${novelty.matchedSlug}, method=${novelty.method})`);
+          duplicateCount++;
+          continue;
+        }
+
+        await db.collection('topics').doc(slug).set({
           title: topic.title,
-          slug: topic.slug,
+          slug,
           keywords: topic.keywords || '',
           description: topic.description || topic.title,
           priority: topic.priority || 5,
@@ -2054,25 +2091,36 @@ Trả về JSON array, KHÔNG có markdown block. Ví dụ:
           createdAt: admin.firestore.FieldValue.serverTimestamp(),
           source: 'auto-replenisher',
         });
+
+        await registerTopicFingerprint(db, {
+          slug,
+          title: topic.title,
+          coarseFingerprint: novelty.coarseFingerprint,
+          embedding: novelty.embedding,
+          registeredAtValue: admin.firestore.FieldValue.serverTimestamp(),
+        });
+
+        addedTitles.push(topic.title);
         addedCount++;
       }
-
-      await batch.commit();
 
       // Notify owner
       await sendEmailNotification({
         title: `[Topics] Đã bổ sung ${addedCount} chủ đề mới`,
-        description: `Queue topics: ${pendingCount} cũ + ${addedCount} mới = ${pendingCount + addedCount}. Top topics: ${newTopics.slice(0, 3).map(t => t.title).join(', ')}`,
+        description: `Queue topics: ${pendingCount} cũ + ${addedCount} mới = ${pendingCount + addedCount}. ` +
+          `Bị chặn trùng: ${duplicateCount}, slug không hợp lệ: ${invalidCount}. Top topics: ${addedTitles.slice(0, 3).join(', ') || '(không có)'}`,
         url: SITE_URL,
         appPassword: gmailAppPassword.value(),
       });
 
-      console.log(`🌱 Replenished ${addedCount} topics (was ${pendingCount} pending)`);
+      console.log(`🌱 Replenished ${addedCount} topics (was ${pendingCount} pending, ${duplicateCount} duplicates skipped, ${invalidCount} invalid slugs skipped)`);
       return res.status(200).json({
         success: true,
         previousPending: pendingCount,
         added: addedCount,
-        topics: newTopics.map(t => t.title),
+        duplicatesSkipped: duplicateCount,
+        invalidSlugsSkipped: invalidCount,
+        topics: addedTitles,
       });
     } catch (error) {
       logger.error('❌ Topic replenisher failed:', error);
@@ -2926,8 +2974,16 @@ Object.assign(exports, pipeline);
 //     Triggered by Cloud Scheduler (cron: 0 3 * * * → daily 3AM VN)
 //     Pulls GSC Search Analytics data per article → writes to Firestore
 //     Powers the Content Performance Dashboard
+//     B7 fix: this used to be named `contentAnalytics`, same as the on-demand GA4-skeleton
+//     endpoint further down this file (line ~3638) that the frontend calls directly
+//     (keolai-next/lib/analytics.js, keolai-next/app/cms/page.js). Two `exports.contentAnalytics`
+//     assignments in one module silently collide — only the last one survives — so this cron
+//     job was NEVER actually deployed; the daily GSC sync it describes has never run. Renamed
+//     so both are deployed distinctly. Frontend behavior is unchanged (still calls the GA4
+//     skeleton under the old name). Requires updating the `contentAnalytics` Cloud Scheduler
+//     job's target URI to this new function name post-deploy — see PR description.
 // ═══════════════════════════════════════
-exports.contentAnalytics = functions.https.onRequest(
+exports.contentAnalyticsSync = functions.https.onRequest(
   {
     secrets: [appClientSecret],
     region: 'us-central1',

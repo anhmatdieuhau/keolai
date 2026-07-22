@@ -25,6 +25,10 @@ const vertexApiKey = defineSecret('VERTEX_API_KEY');
 const appClientSecret = defineSecret('APP_CLIENT_SECRET');
 const gmailAppPassword = defineSecret('GMAIL_APP_PASSWORD');
 
+const { normalizeSlug, isValidSlug } = require('./lib/slug');
+const { evaluateTopicNovelty, registerTopicFingerprint } = require('./lib/topic-dedup');
+const { embedTopicTitle } = require('./lib/embeddings');
+
 const SITE_URL = 'https://keolaigiamhom.vn';
 
 // HTML escape to prevent XSS in generated article pages
@@ -255,17 +259,7 @@ exports.pipelineResearcher = functions.https.onRequest(
 
             // 2. Generate Content Brief for top keyword via Vertex AI
             const targetKw = topKeywords[0];
-            const slug = targetKw.term
-                .toLowerCase()
-                .replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g, 'a')
-                .replace(/[èéẹẻẽêềếệểễ]/g, 'e')
-                .replace(/[ìíịỉĩ]/g, 'i')
-                .replace(/[òóọỏõôồốộổỗơờớợởỡ]/g, 'o')
-                .replace(/[ùúụủũưừứựửữ]/g, 'u')
-                .replace(/[ỳýỵỷỹ]/g, 'y')
-                .replace(/đ/g, 'd')
-                .replace(/[^a-z0-9]+/g, '-')
-                .replace(/^-|-$/g, '');
+            const slug = normalizeSlug(targetKw.term);
 
             // Check if brief already exists
             const existingBrief = await db.collection('pipeline').doc('briefs')
@@ -344,6 +338,31 @@ Trả về JSON (không markdown, không giải thích) với format:
                 };
             }
 
+            // B6 fix: hard novelty gate on the actual proposed title (not just "does a brief
+            // already exist for this exact keyword slug") — catches rephrased topics that
+            // duplicate an already-published article or already-queued brief before a human
+            // reviewer even sees it.
+            let novelty;
+            try {
+                novelty = await evaluateTopicNovelty({ title: briefData.title || targetKw.term }, db, {
+                    embedFn: (text) => embedTopicTitle(text, apiKey),
+                });
+            } catch (embedErr) {
+                console.warn(`⚠️ [Researcher] embedding check failed, falling back to coarse-only: ${embedErr.message}`);
+                novelty = await evaluateTopicNovelty({ title: briefData.title || targetKw.term }, db);
+            }
+
+            if (novelty.status === 'duplicate') {
+                console.log(`⏭️  [Researcher] Skipped duplicate topic "${briefData.title}" (matches ${novelty.matchedSlug}, method=${novelty.method})`);
+                return res.status(200).json({
+                    success: true,
+                    skipped: true,
+                    reason: 'duplicate_topic',
+                    matched_slug: novelty.matchedSlug,
+                    method: novelty.method,
+                });
+            }
+
             // 3. Save brief artifact
             const brief = {
                 ...briefData,
@@ -358,6 +377,14 @@ Trả về JSON (không markdown, không giải thích) với format:
 
             await db.collection('pipeline').doc('briefs')
                 .collection('items').doc(slug).set(brief);
+
+            await registerTopicFingerprint(db, {
+                slug,
+                title: briefData.title || targetKw.term,
+                coarseFingerprint: novelty.coarseFingerprint,
+                embedding: novelty.embedding,
+                registeredAtValue: admin.firestore.FieldValue.serverTimestamp(),
+            });
 
             console.log(`📚 [Researcher] Brief created: ${slug} — "${briefData.title}"`);
 
@@ -572,6 +599,15 @@ exports.pipelineWriter = functions.https.onRequest(
             const briefDoc = approvedSnap.docs[0];
             const brief = briefDoc.data();
             const slug = briefDoc.id;
+
+            // Defense-in-depth: reject at the last-mile write to `articles/{slug}` too, in case
+            // an invalid slug got queued before this fix (or via a path that doesn't go through
+            // normalizeSlug). Cheap check, avoids a silent 404 at serveArticle time later.
+            if (!isValidSlug(slug)) {
+                console.error(`❌ [Writer] Rejected brief with invalid slug: ${slug}`);
+                await briefDoc.ref.update({ status: 'error', errorMessage: `Invalid slug: ${slug}` });
+                return res.status(200).json({ success: false, error: 'invalid_slug', slug });
+            }
 
             console.log(`✍️ [Writer] Writing article for: "${brief.title}" (${slug})`);
 
@@ -859,11 +895,7 @@ exports.pipelineOrchestrator = functions.https.onRequest(
                 if (!trendSnap.empty) {
                     const topKw = trendSnap.docs[0].data().keywords?.[0];
                     if (topKw) {
-                        const slug = topKw.term.toLowerCase()
-                            .replace(/[àáạảãâầấậẩẫăằắặẳẵ]/g, 'a').replace(/[èéẹẻẽêềếệểễ]/g, 'e')
-                            .replace(/[ìíịỉĩ]/g, 'i').replace(/[òóọỏõôồốộổỗơờớợởỡ]/g, 'o')
-                            .replace(/[ùúụủũưừứựửữ]/g, 'u').replace(/[ỳýỵỷỹ]/g, 'y')
-                            .replace(/đ/g, 'd').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+                        const slug = normalizeSlug(topKw.term);
 
                         const existingBrief = await db.collection('pipeline').doc('briefs')
                             .collection('items').doc(slug).get();
@@ -895,15 +927,38 @@ Trả JSON: {"title":"...","target_keyword":"${topKw.term}","secondary_keywords"
                                     briefData = JSON.parse(jsonMatch ? jsonMatch[0] : raw);
                                 } catch { briefData = { title: topKw.term, target_keyword: topKw.term }; }
 
-                                await db.collection('pipeline').doc('briefs')
-                                    .collection('items').doc(slug).set({
-                                        ...briefData, slug, cluster: topKw.cluster,
-                                        revenue_score: topKw.revenue_score, status: 'pending_review',
-                                        created_at: admin.firestore.FieldValue.serverTimestamp(), agent: 'researcher',
+                                // B6 fix: same hard novelty gate as pipelineResearcher — this is
+                                // a second, independent entry point that creates briefs, so it
+                                // needs the same gate or it reopens the exact hole being fixed.
+                                let novelty;
+                                try {
+                                    novelty = await evaluateTopicNovelty({ title: briefData.title || topKw.term }, db, {
+                                        embedFn: (text) => embedTopicTitle(text, apiKey),
                                     });
-                                results.researcher = { slug, title: briefData.title, status: 'pending_review' };
-                                // Notify Telegram for mobile review
-                                await notifyEmailNewBrief(slug, { ...briefData, revenue_score: topKw.revenue_score });
+                                } catch (embedErr) {
+                                    novelty = await evaluateTopicNovelty({ title: briefData.title || topKw.term }, db);
+                                }
+
+                                if (novelty.status === 'duplicate') {
+                                    results.researcher = { slug, status: 'skipped_duplicate', matched_slug: novelty.matchedSlug, method: novelty.method };
+                                } else {
+                                    await db.collection('pipeline').doc('briefs')
+                                        .collection('items').doc(slug).set({
+                                            ...briefData, slug, cluster: topKw.cluster,
+                                            revenue_score: topKw.revenue_score, status: 'pending_review',
+                                            created_at: admin.firestore.FieldValue.serverTimestamp(), agent: 'researcher',
+                                        });
+                                    await registerTopicFingerprint(db, {
+                                        slug,
+                                        title: briefData.title || topKw.term,
+                                        coarseFingerprint: novelty.coarseFingerprint,
+                                        embedding: novelty.embedding,
+                                        registeredAtValue: admin.firestore.FieldValue.serverTimestamp(),
+                                    });
+                                    results.researcher = { slug, title: briefData.title, status: 'pending_review' };
+                                    // Notify Telegram for mobile review
+                                    await notifyEmailNewBrief(slug, { ...briefData, revenue_score: topKw.revenue_score });
+                                }
                             }
                         } else {
                             results.researcher = { slug, status: 'already_exists' };
