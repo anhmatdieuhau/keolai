@@ -35,6 +35,7 @@ const VERDICT_SCHEMA = {
     reason: { type: 'string' },
   },
   required: ['verdict', 'confidence', 'reason'],
+  additionalProperties: false, // required by Claude's output_config.format for object schemas — omitting this 400s
 };
 
 function tokenize(text) {
@@ -95,7 +96,18 @@ async function verifyClaim(claim, { fetchFn, claudeClient }) {
       return { verdict: 'REJECTED', reject_reason: 'source_not_gsc_ga4', tier: 2 };
     }
 
-    const claimNumbers = extractNumbers(claim.claim).map((n) => Math.round(n * 10) / 10);
+    // Strip narrative numbers that are never metric values before extracting:
+    // ISO date substrings (each contributes 3 digit groups: year/month/day)
+    // and "N ngày" day-window mentions (every sensor claim says "trong 28
+    // ngày qua" — 28 is a fixed constant, not something from raw_api_response,
+    // and requiring it to match caused every real, correctly-sourced claim
+    // to be wrongly rejected as metric_mismatch — caught by an actual E2E
+    // run against production, not by the mocked unit tests).
+    const claimTextForNumbers = claim.claim
+      .replace(/\d{4}-\d{2}-\d{2}/g, '')
+      .replace(/\d+\s*ngày/gi, '');
+
+    const claimNumbers = extractNumbers(claimTextForNumbers).map((n) => Math.round(n * 10) / 10);
     const sourceNumbers = flattenNumbers(claim.raw_api_response).map((n) => Math.round(n * 10) / 10);
     const allMatch = claimNumbers.every((n) => sourceNumbers.some((s) => Math.abs(s - n) <= METRIC_MATCH_TOLERANCE));
 

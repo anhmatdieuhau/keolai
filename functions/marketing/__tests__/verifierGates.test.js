@@ -8,6 +8,8 @@
  * rejected 100% of the time, and no real fetch/LLM call happens (fully mocked).
  */
 const assert = require('assert');
+const fs = require('fs');
+const path = require('path');
 const { verifyClaim, claimId, snippetOverlapRatio, extractNumbers, flattenNumbers } = require('../lib/verifierGates');
 
 function fakeFetch(responses) {
@@ -72,6 +74,24 @@ function fakeClaudeClient(verdict) {
     assert.strictEqual(result.verdict, 'REJECTED');
     assert.strictEqual(result.reject_reason, 'source_not_gsc_ga4');
     console.log('PASS: tier 2 fixture — claim with non-GSC/GA4-shaped raw_api_response is REJECTED (source_not_gsc_ga4)');
+  }
+
+  // Regression fixture: claim text contains a day-window phrase ("trong 28
+  // ngày qua") and an ISO date, neither of which are real metric values —
+  // found via real E2E testing against production (every sensor claim says
+  // "trong 28 ngày qua", and 28 doesn't appear in raw_api_response, so this
+  // wrongly rejected 100% of legitimate site-metric claims before the fix).
+  {
+    const claim = {
+      claim: 'Trong 28 ngày qua (tính từ 2026-07-20), trang X đang ở vị trí 8.2 với 500 impression.',
+      source_url: 'https://keolaigiamhom.vn/articles/x/',
+      evidence_snippet: 'query="x", position=8.2, impressions=500',
+      raw_api_response: { query: 'x', page: 'y', position: 8.2, impressions: 500, clicks: 3, ctr: 0.6 },
+    };
+    const result = await verifyClaim(claim, { fetchFn: fakeFetch({}), claudeClient: fakeClaudeClient({}) });
+    assert.strictEqual(result.verdict, 'SUPPORTED');
+    assert.strictEqual(result.tier, 2);
+    console.log('PASS: tier 2 regression — day-window ("28 ngày") and ISO-date numbers are stripped before matching, real metrics still SUPPORTED');
   }
 
   // ══ Tier 1 + 3: content/competitor claims ══
@@ -220,6 +240,34 @@ function fakeClaudeClient(verdict) {
     assert.strictEqual(claimId(claim), claimId({ ...claim }), 'same claim content must produce the same ID');
     assert.notStrictEqual(claimId(claim), claimId({ ...claim, claim: 'different' }));
     console.log('PASS: claimId is stable for identical content, differs when content differs');
+  }
+
+  // Regression guard: VERDICT_SCHEMA (and GAP_JUDGE_SCHEMA, same family of
+  // bug) must always set additionalProperties: false. Found via real E2E
+  // testing — Claude's output_config.format 400s with "For 'object' type,
+  // 'additionalProperties' must be explicitly set to false" if it's missing,
+  // a failure mode invisible to the mocked claudeClient used throughout this
+  // file (it never validates against the real API's schema requirements).
+  {
+    const gatesSource = fs.readFileSync(path.join(__dirname, '../lib/verifierGates.js'), 'utf8');
+    const schemaStart = gatesSource.indexOf('const VERDICT_SCHEMA');
+    const schemaEnd = gatesSource.indexOf('\n};', schemaStart);
+    const schemaSource = gatesSource.slice(schemaStart, schemaEnd);
+    assert.ok(
+      /additionalProperties:\s*false/.test(schemaSource),
+      'VERDICT_SCHEMA must set additionalProperties: false, or Claude\'s output_config.format 400s on every real call'
+    );
+    console.log('PASS: VERDICT_SCHEMA has additionalProperties: false (regression guard for real Claude API 400)');
+
+    const serpGapSource = fs.readFileSync(path.join(__dirname, '../sensors/serpGapScan.js'), 'utf8');
+    const gapSchemaStart = serpGapSource.indexOf('const GAP_JUDGE_SCHEMA');
+    const gapSchemaEnd = serpGapSource.indexOf('\n};', gapSchemaStart);
+    const gapSchemaSource = serpGapSource.slice(gapSchemaStart, gapSchemaEnd);
+    assert.ok(
+      /additionalProperties:\s*false/.test(gapSchemaSource),
+      'GAP_JUDGE_SCHEMA should also set additionalProperties: false for consistency across providers'
+    );
+    console.log('PASS: GAP_JUDGE_SCHEMA has additionalProperties: false (defense-in-depth, consistent with VERDICT_SCHEMA)');
   }
 
   console.log('\nAll verifierGates tests passed — 100% rejection on every fabricated-claim fixture.');

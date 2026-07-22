@@ -75,6 +75,7 @@ const GAP_JUDGE_SCHEMA = {
     reason: { type: 'string' },
   },
   required: ['is_gap', 'reason'],
+  additionalProperties: false, // not strictly required by Gemini's responseSchema, but keep schemas consistent across providers
 };
 
 /**
