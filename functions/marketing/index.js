@@ -9,6 +9,7 @@
  * ordering).
  */
 const functions = require('firebase-functions/v2/https');
+const { onDocumentWritten } = require('firebase-functions/v2/firestore');
 const { defineSecret } = require('firebase-functions/params');
 const admin = require('firebase-admin');
 const { google } = require('googleapis');
@@ -17,11 +18,14 @@ const { GoogleAuth } = require('google-auth-library');
 const db = admin.firestore();
 const vertexApiKey = defineSecret('VERTEX_API_KEY');
 const appClientSecret = defineSecret('APP_CLIENT_SECRET');
+const anthropicApiKey = defineSecret('ANTHROPIC_API_KEY');
 
 const { runGscDemandScan } = require('./sensors/gscDemandScan');
 const { runContentDecayScan } = require('./sensors/contentDecayScan');
 const { runSerpGapScan } = require('./sensors/serpGapScan');
 const { createGeminiClient } = require('./lib/geminiClient');
+const { createClaudeClient } = require('./lib/claudeClient');
+const { verifyClaim, claimId } = require('./lib/verifierGates');
 const costGuard = require('./lib/costGuard');
 
 function isAuthorized(req) {
@@ -109,5 +113,114 @@ exports.serpGapScan = functions.onRequest(
       console.error('❌ [serpGapScan] failed:', error);
       return res.status(500).json({ error: error.message });
     }
+  }
+);
+
+// ═══════════════════════════════════════════════════════════
+// PHASE 2 — evidenceVerifier (Gate #1)
+//
+// Event-driven off signals/{date} — no separate cron. Fires once per sensor
+// write (demand/decay/gap merge into the same doc across the morning), so
+// every claim gets a stable claimId() and already-verified IDs are skipped
+// on repeat firings rather than re-verified 3x.
+//
+// Writes verdicts to verified_claims/{date} — a SEPARATE collection from
+// signals/{date}. Writing back to signals/{date} itself would re-trigger
+// this same onDocumentWritten listener and loop forever; see
+// functions/marketing/lib/verifierGates.js and the plan for the full
+// reasoning. strategistAgent (Phase 3) reads verified_claims/, never
+// signals/ directly.
+// ═══════════════════════════════════════════════════════════
+exports.evidenceVerifier = onDocumentWritten(
+  {
+    document: 'signals/{date}',
+    region: 'us-central1',
+    secrets: [anthropicApiKey],
+    timeoutSeconds: 300,
+    memory: '256MiB',
+  },
+  async (event) => {
+    const date = event.params.date;
+    const after = event.data?.after?.data();
+    if (!after) return; // document deleted — nothing to verify
+
+    const allClaims = [
+      ...(after.demand || []).map((c) => ({ ...c, category: 'demand' })),
+      ...(after.decay || []).map((c) => ({ ...c, category: 'decay' })),
+      ...(after.gap || []).map((c) => ({ ...c, category: 'gap' })),
+    ];
+    if (allClaims.length === 0) return;
+
+    const verifiedRef = db.collection('verified_claims').doc(date);
+    const existingSnap = await verifiedRef.get();
+    const existingClaims = existingSnap.exists ? existingSnap.data().claims || [] : [];
+    const alreadyVerifiedIds = new Set(existingClaims.map((c) => c.claim_id));
+
+    const newClaims = allClaims.filter((c) => !alreadyVerifiedIds.has(claimId(c)));
+    if (newClaims.length === 0) {
+      console.log(`🔒 [evidenceVerifier] signals/${date}: no new claims since last run`);
+      return;
+    }
+
+    const budget = await costGuard.checkBudget(db);
+    const claudeClient = createClaudeClient(anthropicApiKey.value());
+
+    const verifiedResults = [];
+    const rejectReasonCounts = {};
+    let tier3Calls = 0;
+
+    for (const claim of newClaims) {
+      const id = claimId(claim);
+
+      if (!budget.ok) {
+        verifiedResults.push({ ...claim, claim_id: id, verdict: 'REJECTED', reject_reason: 'cost_guard_exceeded', verified_at: new Date().toISOString() });
+        rejectReasonCounts.cost_guard_exceeded = (rejectReasonCounts.cost_guard_exceeded || 0) + 1;
+        continue;
+      }
+
+      const result = await verifyClaim(claim, { fetchFn: fetch, claudeClient });
+      if (result.tier === 3) {
+        tier3Calls++;
+        await costGuard.recordUsage(db, 'claude', 800, 150).catch(() => {});
+      }
+
+      verifiedResults.push({
+        ...claim,
+        claim_id: id,
+        verdict: result.verdict,
+        reject_reason: result.reject_reason,
+        tier: result.tier,
+        detail: result.detail || null,
+        verified_at: new Date().toISOString(),
+      });
+      if (result.reject_reason) {
+        rejectReasonCounts[result.reject_reason] = (rejectReasonCounts[result.reject_reason] || 0) + 1;
+      }
+    }
+
+    await verifiedRef.set({ claims: [...existingClaims, ...verifiedResults] }, { merge: true });
+
+    // Flat top-level keys (reject_reason_<name>), not a nested map — avoids
+    // relying on Firestore's dotted-field-path merge semantics for
+    // something this simple to get right with plain top-level increments.
+    const metricsUpdate = {
+      date,
+      processed: admin.firestore.FieldValue.increment(newClaims.length),
+      supported: admin.firestore.FieldValue.increment(verifiedResults.filter((r) => r.verdict === 'SUPPORTED').length),
+      rejected: admin.firestore.FieldValue.increment(verifiedResults.filter((r) => r.verdict === 'REJECTED').length),
+      tier3Calls: admin.firestore.FieldValue.increment(tier3Calls),
+      updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+    };
+    for (const [reason, count] of Object.entries(rejectReasonCounts)) {
+      metricsUpdate[`reject_reason_${reason}`] = admin.firestore.FieldValue.increment(count);
+    }
+
+    await db.collection('metrics').doc('verifier').collection('dates').doc(date).set(metricsUpdate, { merge: true });
+
+    console.log(`🔒 [evidenceVerifier] signals/${date}: processed ${newClaims.length} new claims`, {
+      supported: verifiedResults.filter((r) => r.verdict === 'SUPPORTED').length,
+      rejected: verifiedResults.filter((r) => r.verdict === 'REJECTED').length,
+      rejectReasonCounts,
+    });
   }
 );
