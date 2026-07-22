@@ -23,6 +23,7 @@ const gmailAppPassword = defineSecret('GMAIL_APP_PASSWORD');
 const { normalizeSlug, isValidSlug } = require('./lib/slug');
 const { evaluateTopicNovelty, registerTopicFingerprint } = require('./lib/topic-dedup');
 const { embedTopicTitle } = require('./lib/embeddings');
+const { buildNurtureEmail, buildReengagementEmail } = require('./lib/nurtureTemplates');
 
 // Cloud Tasks client for PBCA experiment lifecycle
 const tasksClient = new CloudTasksClient();
@@ -657,7 +658,7 @@ Yêu cầu:
 Trả về nội dung bài viết thuần túy (không có tiêu đề ở đầu).`;
 
       const geminiRes = await fetch(
-        `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+        `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1458,7 +1459,7 @@ const NURTURE_STEPS = [
 
 exports.autoNurtureLead = functions.https.onRequest(
   {
-    secrets: [vertexApiKey, gmailAppPassword, appClientSecret],
+    secrets: [gmailAppPassword, appClientSecret],
     region: 'us-central1',
     timeoutSeconds: 300,
     memory: '512MiB',
@@ -1508,10 +1509,12 @@ exports.autoNurtureLead = functions.https.onRequest(
         const step = NURTURE_STEPS[currentStep];
 
         try {
-          // Generate personalized email content using Vertex AI
-          const emailContent = await generateNurtureEmail(
-            step, lead, vertexApiKey.value()
-          );
+          // Personalized email content from a fixed template — no LLM call.
+          // See NURTURE_TEMPLATES: free-form generation here was producing
+          // fabricated customer testimonials and unguarded price/spec
+          // restatement sent straight to real leads (no rollback possible
+          // once an email is sent) — replaced with reviewed, fixed copy.
+          const emailContent = buildNurtureEmail(step, lead);
 
           // Send email
           await transporter.sendMail({
@@ -1563,68 +1566,8 @@ exports.autoNurtureLead = functions.https.onRequest(
   }
 );
 
-// HELPER: Generate personalized nurture email with Vertex AI
-async function generateNurtureEmail(step, lead, apiKey) {
-  const regionContext = lead.province
-    ? `Khách hàng ở ${lead.province}.`
-    : '';
-  const quantityContext = lead.quantity
-    ? `Quan tâm đặt khoảng ${lead.quantity} vạn cây.`
-    : '';
-
-  const prompts = {
-    welcome: `Viết email chào mừng ngắn gọn (200 từ) cho khách hàng quan tâm giống keo lai AH1.
-${regionContext} ${quantityContext}
-Nội dung: cảm ơn, giới thiệu vườn ươm Ngọc Sơn, và 5 tips nhanh về cách trồng keo lai hiệu quả.
-Tone: thân thiện, chuyên nghiệp. Kết thúc bằng CTA liên hệ Zalo.`,
-
-    technical: `Viết nội dung email kỹ thuật (250 từ) về cách chọn giống keo lai AH1 chất lượng.
-${regionContext} ${quantityContext}
-Bao gồm: 3-4 tiêu chí chọn giống tốt, dấu hiệu cây khỏe, mùa trồng phù hợp.
-Tone: chuyên gia nhưng dễ hiểu. CTA: đọc thêm trên website.`,
-
-    pricing: `Viết email giới thiệu bảng giá giống keo lai (200 từ).
-${regionContext} ${quantityContext}
-Bao gồm: mức giá tham khảo (800-1200đ/cây tùy số lượng), ưu đãi đặt sớm -5%, hỗ trợ vận chuyển.
-Tone: sales nhẹ nhàng. CTA: gọi ngay 0907.282.960 hoặc Zalo.`,
-
-    testimonial: `Viết email case study (200 từ) về khách hàng trồng keo lai thành công.
-${regionContext}
-Tạo 2 câu chuyện ngắn: (1) khách ở Quảng Ngãi đặt 10 vạn cây, tỉ lệ sống 95%, (2) khách ở Bình Định trồng 5ha, thu hoạch sau 5 năm.
-CTA: liên hệ để trở thành khách hàng tiếp theo.`,
-
-    final_offer: `Viết email ưu đãi cuối cùng (150 từ) cho khách hàng đã nhận 4 email trước.
-${regionContext} ${quantityContext}
-Nội dung: giảm 10% cho đơn từ 5 vạn cây, chỉ áp dụng 7 ngày, số lượng có hạn.
-Tone: urgency + FOMO. CTA: gọi ngay 0907.282.960.`,
-  };
-
-  const prompt = prompts[step.template] || prompts.welcome;
-
-  try {
-    const geminiRes = await fetch(
-      `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
-      {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          contents: [{ role: 'user', parts: [{ text: prompt }] }],
-          generationConfig: { temperature: 0.7, maxOutputTokens: 1024 },
-        }),
-      }
-    );
-
-    if (geminiRes.ok) {
-      const data = await geminiRes.json();
-      return data.candidates[0].content.parts[0].text;
-    }
-  } catch (e) {
-    logger.error('AI email generation fallback:', e.message);
-  }
-
-  // Fallback static content
-  return `Xin chào ${lead.name},\n\nCảm ơn bạn đã quan tâm đến giống keo lai AH1 của Vườn Ươm Ngọc Sơn.\n\nLiên hệ 0907.282.960 (Zalo) để được tư vấn chi tiết.`;
-}
+// buildNurtureEmail is imported from ./lib/nurtureTemplates (fixed copy, no
+// LLM call — see that file for why).
 
 // HELPER: Build nurture email HTML
 function buildNurtureEmailHtml(content, step, lead, stepIndex) {
@@ -1741,7 +1684,7 @@ Trả về bài viết thuần túy.`;
 
       try {
         const geminiRes = await fetch(
-          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2022,7 +1965,7 @@ Trả về JSON array, KHÔNG có markdown block. Ví dụ:
 [{"title":"...","slug":"...","keywords":"...","description":"...","priority":8,"label":"Kỹ thuật"}]`;
 
       const geminiRes = await fetch(
-        `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
+        `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -2136,7 +2079,7 @@ Trả về JSON array, KHÔNG có markdown block. Ví dụ:
 // ═══════════════════════════════════════
 exports.reengageStaleLead = functions.https.onRequest(
   {
-    secrets: [vertexApiKey, gmailAppPassword, appClientSecret],
+    secrets: [gmailAppPassword, appClientSecret],
     region: 'us-central1',
     timeoutSeconds: 300,
     memory: '256MiB',
@@ -2196,7 +2139,6 @@ exports.reengageStaleLead = functions.https.onRequest(
 
 // HELPER: Process stale leads batch
 async function processStaleLeads(leadDocs, now, res) {
-  const apiKey = vertexApiKey.value();
   const currentMonth = now.getMonth() + 1;
   const campaign = SEASONAL_CAMPAIGNS[currentMonth];
   const seasonOffer = campaign
@@ -2214,40 +2156,8 @@ async function processStaleLeads(leadDocs, now, res) {
     const lead = leadDoc.data();
 
     try {
-      // Generate personalized re-engagement email
-      const regionCtx = lead.province ? `Khách ở ${lead.province}.` : '';
-      const quantityCtx = lead.quantity ? `Trước đó quan tâm ${lead.quantity} vạn cây.` : '';
-
-      const prompt = `Viết email re-engagement ngắn gọn (150 từ) cho khách hàng cũ của vườn ươm keo lai.
-${regionCtx} ${quantityCtx}
-${seasonOffer}
-Tên khách: ${lead.name}.
-Nội dung: nhắc lại giá trị giống AH1, ưu đãi giảm 10% cho đơn từ 3 vạn cây (hạn 7 ngày).
-Tone: thân thiện, không push quá mạnh. CTA: gọi 0907.282.960 hoặc Zalo.
-CHỈ trả về nội dung email, không có subject line.`;
-
-      let emailContent = `Xin chào ${lead.name},\n\nChúng tôi là Vườn Ươm Ngọc Sơn. Nhớ lần trước bạn quan tâm giống keo lai AH1.\n\nHiện tại chúng tôi có ưu đãi giảm 10% cho đơn từ 3 vạn cây. Liên hệ 0907.282.960 (Zalo) để được tư vấn.`;
-
-      try {
-        const geminiRes = await fetch(
-          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-2.5-flash-lite:generateContent?key=${apiKey}`,
-          {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{ role: 'user', parts: [{ text: prompt }] }],
-              generationConfig: { temperature: 0.7, maxOutputTokens: 512 },
-            }),
-          }
-        );
-
-        if (geminiRes.ok) {
-          const data = await geminiRes.json();
-          emailContent = data.candidates[0].content.parts[0].text;
-        }
-      } catch (aiErr) {
-        logger.error('AI fallback for re-engagement:', aiErr.message);
-      }
+      // Fixed template, no LLM call — see ./lib/nurtureTemplates.js for why.
+      const emailContent = buildReengagementEmail(lead, seasonOffer);
 
       // Build email HTML (reuse nurture style)
       const formattedContent = emailContent
