@@ -3,7 +3,6 @@
  * Uses Firebase Admin SDK with application default credentials
  */
 const admin = require('firebase-admin');
-const { applicationDefault } = require('google-auth-library');
 
 admin.initializeApp({
     projectId: 'keolai-63ec1',

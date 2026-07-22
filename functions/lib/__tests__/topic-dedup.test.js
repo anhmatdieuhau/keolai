@@ -27,9 +27,6 @@ function createFakeFirestore() {
       where(field, op, value) {
         assert.strictEqual(op, '==', 'fake Firestore stub only supports == filters');
         return {
-          async limit() {
-            return this;
-          },
           limit(n) {
             const matches = [...docs.values()].filter((d) => d[field] === value).slice(0, n);
             return {
