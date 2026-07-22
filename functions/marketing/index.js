@@ -23,6 +23,7 @@ const anthropicApiKey = defineSecret('ANTHROPIC_API_KEY');
 const { runGscDemandScan } = require('./sensors/gscDemandScan');
 const { runContentDecayScan } = require('./sensors/contentDecayScan');
 const { runSerpGapScan } = require('./sensors/serpGapScan');
+const { runStrategistAgent } = require('./strategist/strategistAgent');
 const { createGeminiClient } = require('./lib/geminiClient');
 const { createClaudeClient } = require('./lib/claudeClient');
 const { verifyClaim, claimId } = require('./lib/verifierGates');
@@ -222,5 +223,39 @@ exports.evidenceVerifier = onDocumentWritten(
       rejected: verifiedResults.filter((r) => r.verdict === 'REJECTED').length,
       rejectReasonCounts,
     });
+  }
+);
+
+// ═══════════════════════════════════════════════════════════
+// PHASE 3 — strategistAgent
+//
+// Weekly (Cloud Scheduler, T2 7h Asia/Ho_Chi_Minh — after the 3 sensors and
+// evidenceVerifier have had time to run that same morning). Reads
+// verified_claims/{date}, NEVER signals/{date} directly — only claims that
+// already passed Gate #1. Generates candidate proposals with Claude Sonnet
+// 5, then runs proposalConsistencyCheck + a plagiarism guard on every
+// candidate (see functions/marketing/lib/proposalGates.js) before writing
+// anything to proposals/. Does not execute anything — Phase 5's
+// executorAgent doesn't exist yet; proposals just sit in Firestore for
+// Phase 4 shadow-mode grading.
+// ═══════════════════════════════════════════════════════════
+exports.strategistAgent = functions.onRequest(
+  {
+    secrets: [appClientSecret, anthropicApiKey],
+    region: 'us-central1',
+    timeoutSeconds: 300,
+    memory: '256MiB',
+  },
+  async (req, res) => {
+    if (!isAuthorized(req)) return res.status(403).json({ error: 'Unauthorized' });
+    try {
+      const claudeClient = createClaudeClient(anthropicApiKey.value());
+      const result = await runStrategistAgent({ db, claudeClient });
+      console.log('📋 [strategistAgent]', result);
+      return res.status(200).json({ success: true, ...result });
+    } catch (error) {
+      console.error('❌ [strategistAgent] failed:', error);
+      return res.status(500).json({ error: error.message });
+    }
   }
 );
