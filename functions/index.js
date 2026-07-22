@@ -2783,6 +2783,12 @@ exports.competitorSeed = functions.https.onRequest(
 const pipeline = require('./pipeline');
 Object.assign(exports, pipeline);
 
+// ═══════════════════════════════════════════════════════════
+// MARKETING-AGENT MODULE (Phase 1: sensors)
+// ═══════════════════════════════════════════════════════════
+const marketing = require('./marketing');
+Object.assign(exports, marketing);
+
 // ═══════════════════════════════════════
 // 1.2 CONTENT ANALYTICS SYNC (Phase 1)
 //     Triggered by Cloud Scheduler (cron: 0 3 * * * → daily 3AM VN)

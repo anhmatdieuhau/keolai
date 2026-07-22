@@ -13,6 +13,26 @@ service cloud.firestore {
       allow read, write: if false;
     }
 
+    // Marketing-agent system (Phase 1+): all server (Admin SDK) only.
+    match /signals/{date} {
+      allow read, write: if false;
+    }
+    match /verified_claims/{date} {
+      allow read, write: if false;
+    }
+    match /proposals/{id} {
+      allow read, write: if false;
+    }
+    match /metrics/{id} {
+      allow read, write: if false;
+    }
+    match /snapshots/{id} {
+      allow read, write: if false;
+    }
+    match /config/{id} {
+      allow read, write: if false;
+    }
+
     // Default: deny everything else
     match /{document=**} {
       allow read, write: if false;
