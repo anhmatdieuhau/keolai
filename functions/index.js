@@ -646,7 +646,7 @@ exports.scheduleContentGeneration = functions.https.onRequest(
       const prompt = `Bạn là chuyên gia lâm nghiệp Việt Nam. Viết một bài hướng dẫn kỹ thuật về chủ đề: "${topic.title}".
 
 Yêu cầu:
-- Viết tiếng Việt, chi tiết và chuyên sâu (1000-1500 từ)
+- Viết tiếng Việt, chi tiết và chuyên sâu (1700-2000 từ)
 - Bài viết theo phong cách E-E-A-T (Experience, Expertise, Authority, Trust)
 - Sử dụng dữ liệu cụ thể: số liệu, số đo, phần trăm, thời gian
 - Cấu trúc rõ ràng: mở đầu, các heading h2/h3, kết luận
