@@ -9,12 +9,15 @@
     "start": "npm run shell",
     "deploy": "firebase deploy --only functions",
     "logs": "firebase functions:log",
-    "seed": "node seed-topics.js"
+    "seed": "node seed-topics.js",
+    "test": "node scripts/run-tests.js",
+    "lint": "eslint ."
   },
   "engines": {
     "node": "22"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.112.5",
     "@google-analytics/data": "^5.2.2",
     "@google-cloud/tasks": "^5.5.2",
     "@google-cloud/vertexai": "^1.9.0",
@@ -25,5 +28,10 @@
     "googleapis": "^144.0.0",
     "nodemailer": "^8.0.3"
   },
-  "private": true
+  "private": true,
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.7.0",
+    "globals": "^17.7.0"
+  }
 }

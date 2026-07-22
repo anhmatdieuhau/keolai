@@ -15,7 +15,6 @@ const db = admin.firestore();
 
 const OLD_SLUG = "mua-vu-tây-nguyên-thang-4-2026";
 const NEW_SLUG = "mua-vu-tay-nguyen-thang-4-2026";
-const OLD_URL = `https://keolaigiamhom.vn/articles/${OLD_SLUG}/`;
 const NEW_URL = `https://keolaigiamhom.vn/articles/${NEW_SLUG}/`;
 
 async function fixUnicodeSlug() {

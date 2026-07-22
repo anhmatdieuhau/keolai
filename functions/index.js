@@ -11,7 +11,7 @@ const cors = require('cors')({
 const admin = require('firebase-admin');
 const nodemailer = require('nodemailer');
 
-const { defineSecret, defineString } = require('firebase-functions/params');
+const { defineSecret } = require('firebase-functions/params');
 const { CloudTasksClient } = require('@google-cloud/tasks');
 const { google } = require('googleapis');
 
@@ -2152,8 +2152,11 @@ exports.reengageStaleLead = functions.https.onRequest(
       console.log('🔄 Stale lead re-engagement triggered');
 
       const now = new Date();
-      const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
+      // NOTE: comment below says "older than 30 days" but the query has no
+      // date filter — every completed/not-yet-reengaged lead qualifies
+      // regardless of age. Flagged, not changed here (out of scope for this
+      // PR and touches the auto-nurture email pipeline) — see PR description.
       // Find completed nurture leads older than 30 days, not yet re-engaged
       const staleLeadsSnap = await db.collection('leads')
         .where('nurture_status', '==', 'completed')
@@ -3582,7 +3585,9 @@ exports.sheetsExport = functions.https.onRequest(
           range: 'Weekly Summary!A1:J',
         });
         existingRows = existing.data.values || [];
-      } catch (_) {}
+      } catch (_) {
+        // Sheet/tab may not exist yet on first run — fall back to empty rows.
+      }
 
       const summaryHeader = ['Tuần', 'Tổng leads mới', 'Bài viết mới', 'Top sources', 'Tổng leads', 'Tổng bài viết', 'Updated'];
       const summaryRow = [
