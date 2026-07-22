@@ -644,7 +644,7 @@ Trả về nội dung BÀI VIẾT thuần túy (không tiêu đề ở đầu, k
 
             const apiKey = vertexApiKey.value();
             const geminiRes = await fetch(
-                `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.0-flash-lite:generateContent?key=${apiKey}`,
+                `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
