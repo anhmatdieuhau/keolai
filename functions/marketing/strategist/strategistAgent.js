@@ -69,9 +69,11 @@ ${claimsList}
 
 Danh sách domain đối thủ (chỉ dùng evidence từ các claim "gap" để XÁC ĐỊNH có lỗ hổng nội dung, TUYỆT ĐỐI KHÔNG sao chép/diễn giải sát nghĩa nội dung của họ vào proposed_change): ${competitorDomains.join(', ') || '(không có)'}
 
+LƯU Ý QUAN TRỌNG về claim "không khớp với bất kỳ chủ đề nào đã có bài viết" (uncovered demand): source_url của loại claim này chỉ là trang GẦN GIỐNG NHẤT mà GSC tìm được, KHÔNG PHẢI trang thực sự phù hợp để sửa — chính claim đã nói rõ chưa có bài nào khớp chủ đề. Với claim loại này, BẮT BUỘC dùng action_type=propose_new_article, TUYỆT ĐỐI KHÔNG dùng source_url đó làm target_url cho update_meta/add_faq/fix_internal_link/update_data (sẽ bị hệ thống từ chối vì không tìm thấy trang thật để sửa).
+
 Hãy sinh tối đa ${MAX_PROPOSALS_PER_RUN} đề xuất (proposals) hành động, mỗi đề xuất PHẢI:
-- action_type là 1 trong: update_meta, add_faq, fix_internal_link (sửa bài có sẵn — ưu tiên, xem "Ràng buộc phạm vi nội dung" ở trên), update_data (sửa số liệu/giá), propose_new_article (chỉ khi thực sự không có bài nào phù hợp để sửa).
-- target_url: với 4 action_type đầu, PHẢI dùng ĐÚNG NGUYÊN VĂN 1 giá trị source_url đã liệt kê ở trên (không tự bịa URL). Với propose_new_article, đề xuất 1 slug mới hợp lý dạng "/articles/ten-slug-moi/".
+- action_type là 1 trong: update_meta, add_faq, fix_internal_link (sửa bài có sẵn — ưu tiên, xem "Ràng buộc phạm vi nội dung" ở trên), update_data (sửa số liệu/giá), propose_new_article (dùng cho claim "uncovered demand" ở trên, hoặc khi thực sự không có bài nào phù hợp để sửa).
+- target_url: với 4 action_type đầu, PHẢI dùng ĐÚNG NGUYÊN VĂN 1 giá trị source_url của MỘT CLAIM THỰC SỰ NÓI VỀ TRANG ĐÓ (ví dụ claim "suy giảm"/"striking-distance" nói về chính trang đó) — không tự bịa URL, không mượn source_url từ claim "uncovered demand". Với propose_new_article, đề xuất 1 slug mới hợp lý dạng "/articles/ten-slug-moi/".
 - claims: mỗi luận điểm (statement) trong rationale/proposed_change PHẢI có evidence_refs trỏ ĐÚNG claim_id đã liệt kê ở trên (không tự bịa ID, không dùng ID không có trong danh sách).
 - Không đưa vào bất kỳ số điện thoại/giá/thông tin liên hệ nào ngoài phần "NAP chuẩn" ở business context.
 - proposed_change: MÔ TẢ NGẮN GỌN nội dung sẽ thay đổi/thêm (tối đa ~100 từ) — đây là bản tóm tắt cho người duyệt xem, KHÔNG PHẢI bản nội dung hoàn chỉnh cuối cùng (bản đầy đủ sẽ do bước thực thi soạn sau, khi đề xuất đã được duyệt).
