@@ -66,6 +66,8 @@ function fakeClaudeClient(responses) {
   const calls = [];
   return {
     calls,
+    model: 'claude-sonnet-5', // matches createClaudeClient's DEFAULT_MODEL — costGuard.recordUsage keys usage by this
+    lastUsage: null, // real client exposes real token counts here; fake has none, so callers fall back to their ESTIMATED_* constants
     async callJSON(args) {
       calls.push(args);
       const next = queue.shift();
@@ -285,9 +287,9 @@ const FIXED_NOW = new Date('2026-07-22T12:00:00Z'); // same week as verified_cla
   // ── costGuard exceeded -> skip entirely, Claude never called ──
   {
     const db = createFakeFirestore({ verifiedClaims: [{ claim_id: 'c1', verdict: 'SUPPORTED' }] });
-    // Seed costGuard's month doc with spend already over DEFAULT_MONTHLY_LIMIT_USD ($10).
+    // Seed costGuard's month doc with spend already over DEFAULT_MONTHLY_LIMIT_USD ($1.85).
     const monthKey = FIXED_NOW.toISOString().slice(0, 7);
-    db._store.set(`metrics/costGuard/months/${monthKey}`, { claude: { calls: 1000, tokensIn: 50_000_000, tokensOut: 10_000_000 } });
+    db._store.set(`metrics/costGuard/months/${monthKey}`, { 'claude-sonnet-5': { calls: 1000, tokensIn: 50_000_000, tokensOut: 10_000_000 } });
     const claude = fakeClaudeClient([]);
     const result = await runStrategistAgent({ db, claudeClient: claude, now: FIXED_NOW });
     assert.strictEqual(result.skipped, 'cost_guard_exceeded');

@@ -113,7 +113,8 @@ async function runStrategistAgent({ db, claudeClient, now = new Date() }) {
   let generated;
   try {
     generated = await claudeClient.callJSON({ prompt, schema: PROPOSAL_SCHEMA });
-    await costGuard.recordUsage(db, 'claude', ESTIMATED_GENERATION_TOKENS_IN, ESTIMATED_GENERATION_TOKENS_OUT).catch(() => {});
+    const genUsage = claudeClient.lastUsage || { tokensIn: ESTIMATED_GENERATION_TOKENS_IN, tokensOut: ESTIMATED_GENERATION_TOKENS_OUT };
+    await costGuard.recordUsage(db, claudeClient.model, genUsage.tokensIn, genUsage.tokensOut).catch(() => {});
   } catch (err) {
     console.error('❌ [strategistAgent] generation call failed:', err);
     return { proposalsGenerated: 0, reason: 'generation_api_error', detail: err.message };
@@ -148,8 +149,14 @@ async function runStrategistAgent({ db, claudeClient, now = new Date() }) {
     // ── Gate 3: proposalConsistencyCheck — LLM re-verification of the strategist's own claims ──
     const consistency = await runConsistencyCheck(candidate, verifiedClaimsById, claudeClient);
     consistencyCheckCalls += consistency.llmCalls;
-    for (let i = 0; i < consistency.llmCalls; i++) {
-      await costGuard.recordUsage(db, 'claude', ESTIMATED_CONSISTENCY_TOKENS_IN, ESTIMATED_CONSISTENCY_TOKENS_OUT).catch(() => {});
+    if (consistency.totalUsage && (consistency.totalUsage.tokensIn || consistency.totalUsage.tokensOut)) {
+      await costGuard.recordUsage(db, claudeClient.model, consistency.totalUsage.tokensIn, consistency.totalUsage.tokensOut).catch(() => {});
+    } else {
+      // Fallback estimate — only hit if the client didn't surface real usage
+      // (e.g. a test double without .usage on its mocked response).
+      for (let i = 0; i < consistency.llmCalls; i++) {
+        await costGuard.recordUsage(db, claudeClient.model, ESTIMATED_CONSISTENCY_TOKENS_IN, ESTIMATED_CONSISTENCY_TOKENS_OUT).catch(() => {});
+      }
     }
     if (!consistency.ok) {
       rejectReasonCounts[consistency.reject_reason] = (rejectReasonCounts[consistency.reject_reason] || 0) + 1;

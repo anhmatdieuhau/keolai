@@ -24,6 +24,7 @@ const { normalizeSlug, isValidSlug } = require('./lib/slug');
 const { evaluateTopicNovelty, registerTopicFingerprint } = require('./lib/topic-dedup');
 const { embedTopicTitle } = require('./lib/embeddings');
 const { buildNurtureEmail, buildReengagementEmail } = require('./lib/nurtureTemplates');
+const costGuard = require('./marketing/lib/costGuard');
 
 // Cloud Tasks client for PBCA experiment lifecycle
 const tasksClient = new CloudTasksClient();
@@ -638,6 +639,12 @@ exports.scheduleContentGeneration = functions.https.onRequest(
       const topic = topicDoc.data();
       console.log(`📌 Auto-selected topic: ${topic.title}`);
 
+      const budget = await costGuard.checkBudget(db);
+      if (!budget.ok) {
+        console.warn('⏸ [scheduleContentGeneration] costGuard monthly budget exceeded, skipping run', budget);
+        return res.status(200).json({ message: 'Monthly cost budget reached, skipped', skipped: 'cost_guard_exceeded', ...budget });
+      }
+
       // Mark as generating
       await topicDoc.ref.update({ status: 'generating', scheduledAt: admin.firestore.FieldValue.serverTimestamp() });
 
@@ -684,6 +691,12 @@ Trả về nội dung bài viết thuần túy (không có tiêu đề ở đầ
       const geminiData = await geminiRes.json();
       const articleContent = geminiData.candidates[0].content.parts[0].text;
       const htmlContent = markdownToHtml(articleContent);
+
+      if (geminiData.usageMetadata) {
+        await costGuard
+          .recordUsage(db, 'gemini-3.6-flash', geminiData.usageMetadata.promptTokenCount || 0, geminiData.usageMetadata.candidatesTokenCount || 0)
+          .catch(() => {});
+      }
 
       const articleHtml = buildArticlePage({
         title: topic.title,
@@ -1216,6 +1229,11 @@ Trả lời ngắn gọn, bullets, tiếng Việt.`;
 
       let aiSummary = '';
       try {
+        const budget = await costGuard.checkBudget(db);
+        if (!budget.ok) {
+          console.warn('⏸ [weeklyAnalyticsReport] costGuard monthly budget exceeded, skipping AI summary', budget);
+          throw new Error('cost_guard_exceeded');
+        }
         const geminiRes = await fetch(
           `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
           {
@@ -1230,6 +1248,11 @@ Trả lời ngắn gọn, bullets, tiếng Việt.`;
         if (geminiRes.ok) {
           const data = await geminiRes.json();
           aiSummary = data.candidates[0].content.parts[0].text;
+          if (data.usageMetadata) {
+            await costGuard
+              .recordUsage(db, 'gemini-3.1-flash-lite', data.usageMetadata.promptTokenCount || 0, data.usageMetadata.candidatesTokenCount || 0)
+              .catch(() => {});
+          }
         }
       } catch (e) {
         aiSummary = 'AI summary unavailable this week.';
@@ -1805,6 +1828,12 @@ exports.autoReplenishTopics = functions.https.onRequest(
         return res.status(200).json({ message: `${pendingCount} topics still pending`, skipped: true });
       }
 
+      const budget = await costGuard.checkBudget(db);
+      if (!budget.ok) {
+        console.warn('⏸ [autoReplenishTopics] costGuard monthly budget exceeded, skipping run', budget);
+        return res.status(200).json({ message: 'Monthly cost budget reached, skipped', skipped: 'cost_guard_exceeded', ...budget });
+      }
+
       // Get existing topic titles to avoid duplicates
       const allTopicsSnap = await db.collection('topics').get();
       const existingTitles = allTopicsSnap.docs.map(d => d.data().title).join('\n- ');
@@ -1897,6 +1926,12 @@ Trả về JSON array, KHÔNG có markdown block. Ví dụ:
 
       const data = await geminiRes.json();
       let topicsText = data.candidates[0].content.parts[0].text;
+
+      if (data.usageMetadata) {
+        await costGuard
+          .recordUsage(db, 'gemini-3.1-flash-lite', data.usageMetadata.promptTokenCount || 0, data.usageMetadata.candidatesTokenCount || 0)
+          .catch(() => {});
+      }
 
       // Clean up potential markdown code blocks
       topicsText = topicsText.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();

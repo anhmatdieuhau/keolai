@@ -98,11 +98,10 @@ exports.serpGapScan = functions.onRequest(
       const wrappedClient = {
         async callJSON(args) {
           const result = await geminiClient.callJSON(args);
-          // Best-effort usage accounting — Gemini's REST response carries
-          // usageMetadata, but callJSON only returns the parsed JSON payload,
-          // so this is a rough per-call estimate rather than exact token
-          // counts. Good enough for a circuit-breaker-style guard.
-          await costGuard.recordUsage(db, 'gemini', 1500, 200).catch(() => {});
+          // Real usage from Vertex AI's usageMetadata (via geminiClient.lastUsage);
+          // falls back to a rough estimate only if the API response ever omits it.
+          const usage = geminiClient.lastUsage || { tokensIn: 1500, tokensOut: 200 };
+          await costGuard.recordUsage(db, geminiClient.model, usage.tokensIn, usage.tokensOut).catch(() => {});
           return result;
         },
       };
@@ -182,7 +181,8 @@ exports.evidenceVerifier = onDocumentWritten(
       const result = await verifyClaim(claim, { fetchFn: fetch, claudeClient });
       if (result.tier === 3) {
         tier3Calls++;
-        await costGuard.recordUsage(db, 'claude', 800, 150).catch(() => {});
+        const usage = claudeClient.lastUsage || { tokensIn: 800, tokensOut: 150 };
+        await costGuard.recordUsage(db, claudeClient.model, usage.tokensIn, usage.tokensOut).catch(() => {});
       }
 
       verifiedResults.push({
