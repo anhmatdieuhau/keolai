@@ -25,6 +25,10 @@ function createClaudeClient(apiKey, opts = {}) {
   const client = opts.client || new Anthropic({ apiKey });
   const model = opts.model || DEFAULT_MODEL;
   const maxTokens = opts.maxTokens || 2048;
+  // Real token usage from the most recent callJSON, for costGuard accounting.
+  // Exposed as a getter (not a return value) so callJSON's return contract —
+  // callers destructure the parsed JSON directly — doesn't change.
+  let lastUsage = null;
 
   /**
    * Calls Claude with a JSON-schema-constrained response and returns the
@@ -49,10 +53,19 @@ function createClaudeClient(apiKey, opts = {}) {
     if (!textBlock) {
       throw new Error('claudeClient.callJSON: response has no text content block');
     }
+    lastUsage = response.usage
+      ? { tokensIn: response.usage.input_tokens || 0, tokensOut: response.usage.output_tokens || 0 }
+      : null;
     return JSON.parse(textBlock.text);
   }
 
-  return { callJSON, model };
+  return {
+    callJSON,
+    model,
+    get lastUsage() {
+      return lastUsage;
+    },
+  };
 }
 
 module.exports = { createClaudeClient, DEFAULT_MODEL };

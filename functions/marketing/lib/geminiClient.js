@@ -22,6 +22,10 @@ function createGeminiClient(apiKey, opts = {}) {
   const model = opts.model || DEFAULT_MODEL;
   const maxOutputTokens = opts.maxOutputTokens || 1024;
   const fetchFn = opts.fetchFn || fetch;
+  // Real token usage from the most recent callJSON, for costGuard accounting.
+  // Exposed as a getter (not a return value) so callJSON's return contract —
+  // callers destructure the parsed JSON directly — doesn't change.
+  let lastUsage = null;
 
   /**
    * @param {{prompt: string, schema: object, temperature?: number}} args
@@ -52,10 +56,19 @@ function createGeminiClient(apiKey, opts = {}) {
     if (!text) {
       throw new Error('geminiClient.callJSON: response has no text content');
     }
+    lastUsage = data.usageMetadata
+      ? { tokensIn: data.usageMetadata.promptTokenCount || 0, tokensOut: data.usageMetadata.candidatesTokenCount || 0 }
+      : null;
     return JSON.parse(text);
   }
 
-  return { callJSON, model };
+  return {
+    callJSON,
+    model,
+    get lastUsage() {
+      return lastUsage;
+    },
+  };
 }
 
 module.exports = { createGeminiClient, DEFAULT_MODEL };

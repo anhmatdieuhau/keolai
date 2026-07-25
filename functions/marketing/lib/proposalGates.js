@@ -158,11 +158,12 @@ function checkPlagiarism(proposedChange, competitorSnippets) {
  *
  * @param {object} proposal
  * @param {Map<string, object>} verifiedClaimsById - claim_id -> verified claim object (has .claim, .evidence_snippet)
- * @param {{callJSON: Function}} claudeClient
- * @returns {Promise<{ok: boolean, reject_reason: string|null, detail: string|null, llmCalls: number}>}
+ * @param {{callJSON: Function, lastUsage?: {tokensIn: number, tokensOut: number}|null}} claudeClient
+ * @returns {Promise<{ok: boolean, reject_reason: string|null, detail: string|null, llmCalls: number, totalUsage: {tokensIn: number, tokensOut: number}}>}
  */
 async function runConsistencyCheck(proposal, verifiedClaimsById, claudeClient) {
   let llmCalls = 0;
+  const totalUsage = { tokensIn: 0, tokensOut: 0 };
   for (const c of proposal.claims) {
     const evidenceTexts = c.evidence_refs
       .map((ref) => verifiedClaimsById.get(ref))
@@ -181,14 +182,18 @@ Luận điểm trên có HOÀN TOÀN được evidence trên chống đỡ khôn
     try {
       llmCalls++;
       judged = await claudeClient.callJSON({ prompt, schema: CONSISTENCY_SCHEMA, thinking: { type: 'disabled' } });
+      if (claudeClient.lastUsage) {
+        totalUsage.tokensIn += claudeClient.lastUsage.tokensIn;
+        totalUsage.tokensOut += claudeClient.lastUsage.tokensOut;
+      }
     } catch (err) {
-      return { ok: false, reject_reason: 'consistency_check_api_error', detail: err.message, llmCalls };
+      return { ok: false, reject_reason: 'consistency_check_api_error', detail: err.message, llmCalls, totalUsage };
     }
     if (judged.verdict !== 'SUPPORTED') {
-      return { ok: false, reject_reason: 'consistency_check_failed', detail: `"${c.statement}" — ${judged.reason}`, llmCalls };
+      return { ok: false, reject_reason: 'consistency_check_failed', detail: `"${c.statement}" — ${judged.reason}`, llmCalls, totalUsage };
     }
   }
-  return { ok: true, reject_reason: null, detail: null, llmCalls };
+  return { ok: true, reject_reason: null, detail: null, llmCalls, totalUsage };
 }
 
 module.exports = {
