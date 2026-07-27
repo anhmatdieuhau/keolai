@@ -256,20 +256,9 @@
   color: #e2e8f0;
 }
 .portal-nav-item.active {
-  background: rgba(16,185,129,0.1);
+  background: rgba(16,185,129,0.14);
   color: #10b981;
   font-weight: 600;
-}
-.portal-nav-item.active::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 3px;
-  height: 20px;
-  background: var(--p-sidebar-active-bar);
-  border-radius: 0 2px 2px 0;
 }
 .portal-nav-icon {
   font-size: 16px;
@@ -462,7 +451,6 @@
   background: var(--p-surface);
   border: 1px solid var(--p-border);
   border-radius: var(--p-radius);
-  box-shadow: var(--p-shadow);
 }
 .card-header {
   padding: 16px 20px;
@@ -497,24 +485,13 @@
   border: 1px solid var(--p-border);
   border-radius: var(--p-radius);
   padding: 20px;
-  box-shadow: var(--p-shadow);
   position: relative;
-  overflow: hidden;
-  transition: all 0.2s ease;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
 }
 .kpi-card:hover {
   box-shadow: var(--p-shadow-md);
   border-color: color-mix(in srgb, var(--kpi-color, var(--p-accent)) 35%, var(--p-border));
   transform: translateY(-2px);
-}
-.kpi-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 3px;
-  background: var(--kpi-color, var(--p-accent));
 }
 .kpi-icon {
   width: 40px;
@@ -776,7 +753,6 @@ table.portal-table {
   gap: 12px;
   padding: 14px 16px;
   border-radius: var(--p-radius-sm);
-  border-left: 3px solid;
   margin-bottom: 16px;
 }
 .alert-icon { font-size: 16px; flex-shrink: 0; margin-top: 1px; }
@@ -785,22 +761,18 @@ table.portal-table {
 .alert-body { color: var(--p-text-2); }
 .alert-warning {
   background: var(--p-warning-light);
-  border-color: var(--p-warning);
   color: #78350f;
 }
 .alert-danger {
   background: var(--p-danger-light);
-  border-color: var(--p-danger);
   color: #7f1d1d;
 }
 .alert-success {
   background: var(--p-accent-light);
-  border-color: var(--p-accent);
   color: #064e3b;
 }
 .alert-info {
   background: var(--p-info-light);
-  border-color: var(--p-info);
   color: #1e3a8a;
 }
 
