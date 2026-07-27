@@ -238,10 +238,7 @@ export default function DashboardTab({ data, onAction }) {
           <span className="card-title">⚡ Quick Actions</span>
         </div>
         <div className="card-body" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-          <button className="btn btn-primary" onClick={() => onAction?.('cms')}>
-            ✍️ Viết bài mới (CMS)
-          </button>
-          <button className="btn btn-accent" onClick={() => onAction?.('tab-topics')}>
+          <button className="btn btn-primary" onClick={() => onAction?.('tab-topics')}>
             💡 Xem Topic Queue
           </button>
           <a

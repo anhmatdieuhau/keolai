@@ -2,7 +2,7 @@
 import { useState, useMemo } from 'react'
 import { StatusBadge } from './Charts'
 
-const CMS_API = 'https://us-central1-keolai-63ec1.cloudfunctions.net'
+const FUNCTIONS_BASE = 'https://us-central1-keolai-63ec1.cloudfunctions.net'
 
 function fmtDate(iso) {
   if (!iso) return '—'
@@ -56,7 +56,7 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
     setReplenishing(true)
     setReplenishResult(null)
     try {
-      const res = await fetch(`${CMS_API}/autoReplenishTopics`, {
+      const res = await fetch(`${FUNCTIONS_BASE}/autoReplenishTopics`, {
         method: 'POST',
         headers: { 'x-app-secret': appSecret },
       })
@@ -128,12 +128,6 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
         >
           {replenishing ? '⏳ Đang replenish...' : '🔄 Replenish Topics'}
         </button>
-        <a
-          href="/cms"
-          className="btn btn-primary"
-        >
-          ✍️ Tạo bài thủ công (CMS)
-        </a>
         <span style={{ fontSize: 12, color: '#94a3b8' }}>
           Pipeline tự động chạy T2/T4/T6 lúc 6AM · Còn ~{daysRemaining} ngày
         </span>

@@ -1808,6 +1808,11 @@ exports.autoReplenishTopics = functions.https.onRequest(
     // 512MiB already used by pipelineResearcher/pipelineOrchestrator, the other 2
     // callers of this same shared novelty check (see lib/topic-dedup.js).
     memory: '512MiB',
+    // Called directly from the portal's browser UI (Topics tab "Replenish"
+    // button), not just Cloud Scheduler — needs CORS or the browser fetch
+    // never gets past preflight. Authorization is still x-app-secret/scheduler
+    // user-agent below, cors:true doesn't change that.
+    cors: true,
   },
   async (req, res) => {
     try {

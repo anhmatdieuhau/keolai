@@ -159,14 +159,6 @@ function Sidebar({ user, activeTab, onTabChange, topicCount, pendingCount }) {
         <div className="portal-nav-group">
           <div className="portal-nav-group-label">Công cụ</div>
           <a
-            href="/cms"
-            className="portal-nav-item"
-            target="_self"
-          >
-            <span className="portal-nav-icon">✍️</span>
-            CMS (Viết bài)
-          </a>
-          <a
             href="https://search.google.com/search-console"
             target="_blank"
             rel="noopener noreferrer"
@@ -273,7 +265,6 @@ function PortalApp({ user }) {
   }
 
   function handleAction(action) {
-    if (action === 'cms') window.location.href = '/cms'
     if (action === 'tab-topics') handleTabChange('topics')
     if (!tabData[action]) loadSection(action)
     else handleTabChange(action)
@@ -354,9 +345,6 @@ function PortalApp({ user }) {
               >
                 {loading[activeTab] ? '⏳' : '🔄'} Refresh
               </button>
-              <a href="/cms" className="btn btn-primary btn-sm">
-                ✍️ CMS
-              </a>
             </div>
           </div>
 
