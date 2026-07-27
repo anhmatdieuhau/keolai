@@ -1,9 +1,5 @@
 import { Be_Vietnam_Pro } from "next/font/google";
 import "./globals.css";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import SocialFloat from "@/components/SocialFloat";
-import ExitPopup from "@/components/ExitPopup";
 import Script from "next/script";
 
 const font = Be_Vietnam_Pro({
@@ -86,11 +82,7 @@ export default function RootLayout({ children }) {
         </Script>
       </head>
       <body>
-        <Header />
         {children}
-        <Footer />
-        <SocialFloat />
-        <ExitPopup />
       </body>
     </html>
   );
