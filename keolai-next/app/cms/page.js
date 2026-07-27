@@ -4,9 +4,13 @@ import { useState, useEffect } from 'react'
 import { initializeApp } from 'firebase/app'
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from 'firebase/auth'
 
-// Firebase config — reuse existing project
+// Firebase config — reuse existing project. The Web API key is not a secret
+// (Firebase scopes access via Authorized Domains + Firestore/Auth rules, not
+// key secrecy — https://firebase.google.com/docs/projects/api-keys), so it's
+// safe and correct to hardcode alongside the rest of this config rather than
+// depend on a build-time env var that CI doesn't set.
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
+  apiKey: 'AIzaSyBXm5VSqqr0yjVWdREhDEo8cOnH_JC029k',
   authDomain: 'keolai-63ec1.firebaseapp.com',
   projectId: 'keolai-63ec1',
   storageBucket: 'keolai-63ec1.firebasestorage.app',
@@ -16,13 +20,11 @@ const firebaseConfig = {
 }
 
 let app, auth
-if (firebaseConfig.apiKey) {
-  try {
-    app = initializeApp(firebaseConfig, 'cms')
-    auth = getAuth(app)
-  } catch (err) {
-    try { app = initializeApp(firebaseConfig); auth = getAuth(app) } catch (e) { /* demo mode */ }
-  }
+try {
+  app = initializeApp(firebaseConfig, 'cms')
+  auth = getAuth(app)
+} catch (err) {
+  try { app = initializeApp(firebaseConfig); auth = getAuth(app) } catch (e) { /* demo mode */ }
 }
 
 const provider = new GoogleAuthProvider()
