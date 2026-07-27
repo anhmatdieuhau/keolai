@@ -61,6 +61,14 @@ function estimateCostUsd(usage, date = new Date()) {
   let total = 0;
   for (const [model, u] of Object.entries(usage)) {
     if (model === 'updatedAt' || !u || typeof u !== 'object') continue;
+    // Skip fields with no configured rate instead of throwing — e.g. the bare
+    // "gemini"/"claude" keys written before the 2026-07-25 per-model rework
+    // (see metrics/costGuard/months/2026-07). recordUsage() still rejects
+    // unknown models on write, so this only ever swallows stale/legacy data,
+    // not a live bug — but without this guard, one bad field in this month's
+    // doc throws checkBudget() for every caller (autoReplenishTopics,
+    // scheduleContentGeneration, weeklyAnalyticsReport) for the rest of the month.
+    if (!MODEL_RATES_PER_1M_TOKENS_USD[model]) continue;
     const rate = rateForModel(model, date);
     total += (u.tokensIn / 1e6) * rate.in + (u.tokensOut / 1e6) * rate.out;
   }

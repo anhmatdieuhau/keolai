@@ -70,6 +70,20 @@ const POST_CUTOFF_DATE = new Date('2026-09-15T00:00:00Z'); // after it
   assert.strictEqual(tight.ok, false, 'checkBudget must report false once spend exceeds the configured limit');
   console.log('PASS: checkBudget trips ok=false once spend exceeds a tight limit');
 
+  // ── checkBudget tolerates legacy/unrecognized model fields instead of throwing ──
+  // Regression: metrics/costGuard/months/2026-07 has bare "gemini"/"claude" keys
+  // written before the per-model rate table existed, which took down every
+  // costGuard.checkBudget() caller (autoReplenishTopics included) in production.
+  const legacyDb = createFakeFirestore();
+  await legacyDb.collection('metrics').doc('costGuard').collection('months').doc('2026-07').set({
+    gemini: { calls: 18, tokensIn: 27000, tokensOut: 3600 },
+    claude: { calls: 15, tokensIn: 26800, tokensOut: 9160 },
+    'gemini-3.6-flash': { calls: 1, tokensIn: 1000, tokensOut: 200 },
+  });
+  const legacyStatus = await checkBudget(legacyDb, { date: FIXED_DATE });
+  assert.strictEqual(legacyStatus.ok, true, 'unrecognized legacy fields must not throw or be counted');
+  console.log('PASS: checkBudget skips unrecognized legacy model fields instead of throwing');
+
   // ── checkBudget on an empty/new month never throws, defaults to ok=true ──
   const freshDb = createFakeFirestore();
   const fresh = await checkBudget(freshDb, { date: FIXED_DATE });
