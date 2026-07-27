@@ -1,5 +1,5 @@
 'use client'
-import { MiniBarChart } from './Charts'
+import { MiniBarChart, CostBarChart, ProgressMeter } from './Charts'
 import { IconTarget, IconCash, IconCalendar, StatusDot, IconCosts, IconTrend, IconRobot, IconBarChart, IconInbox, IconWarning } from './Icons'
 
 const VND_PER_USD = 26500
@@ -66,9 +66,9 @@ export default function CostsTab({ data }) {
 
   const totalAllTime = Object.values(modelTotals).reduce((s, m) => s + (m.costUsd || 0), 0)
 
-  const budgetStatus = pct >= 90 ? { cls: 'danger', label: 'Nguy hiem', text: 'Gần hết ngân sách!' }
-    : pct >= 70 ? { cls: 'warning', label: 'Can than', text: 'Đã dùng nhiều' }
-    : { cls: 'success', label: 'On dinh', text: 'Trong ngưỡng an toàn' }
+  const budgetStatus = pct >= 90 ? { cls: 'danger', label: 'Nguy hiểm', text: 'Gần hết ngân sách!' }
+    : pct >= 70 ? { cls: 'warning', label: 'Cẩn thận', text: 'Đã dùng nhiều' }
+    : { cls: 'success', label: 'Ổn định', text: 'Trong ngưỡng an toàn' }
 
   const statusColor = pct >= 90 ? '#9F2F2D' : pct >= 70 ? '#956400' : '#2C6B4F'
 

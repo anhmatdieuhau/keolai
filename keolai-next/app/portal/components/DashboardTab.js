@@ -56,14 +56,14 @@ export default function DashboardTab({ data, onAction }) {
   if (topics?.pending <= 3) {
     alerts.push({
       type: 'warning',
-      title: 'Topic sap het!',
+      title: 'Topic sắp hết!',
       body: `Chỉ còn ${topics.pending} topic đang chờ. Pipeline sẽ dừng nếu hết topic.`,
     })
   }
   if (costPct >= 90) {
     alerts.push({
       type: 'danger',
-      title: 'Ngan sach AI gan het!',
+      title: 'Ngân sách AI gần hết!',
       body: `Đã dùng ${formatVnd(cost.spentUsd)} / ${formatVnd(cost.limitUsd)} (${costPct.toFixed(0)}%)`,
     })
   }
@@ -137,7 +137,7 @@ export default function DashboardTab({ data, onAction }) {
             ) : (
               <div className="portal-empty">
                 <div className="portal-empty-icon"><IconInbox size={24} /></div>
-                <div className="portal-empty-title">Chua co topic</div>
+                <div className="portal-empty-title">Chưa có topic</div>
               </div>
             )}
           </div>
@@ -146,7 +146,7 @@ export default function DashboardTab({ data, onAction }) {
         {/* Cost Meter */}
         <div className="card">
           <div className="card-header">
-            <span className="card-title"><><IconCosts size={16} /> Chi Phi AI Thang Nay</></span>
+            <span className="card-title"><><IconCosts size={16} /> Chi Phí AI Tháng Này</></span>
           </div>
           <div className="card-body">
             <div style={{ marginBottom: 16 }}>
@@ -184,7 +184,7 @@ export default function DashboardTab({ data, onAction }) {
         {/* Weekly Trend Chart */}
         <div className="card">
           <div className="card-header">
-            <span className="card-title"><><IconTrend size={16} /> Bai Viet Theo Tuan</></span>
+            <span className="card-title"><><IconTrend size={16} /> Bài Viết Theo Tuần</></span>
             <span className="card-subtitle">4 tuần gần nhất</span>
           </div>
           <div className="card-body">
@@ -210,7 +210,7 @@ export default function DashboardTab({ data, onAction }) {
         {/* Quick Actions + Latest AI Summary */}
         <div className="card">
           <div className="card-header">
-            <span className="card-title"><><IconRobot size={16} /> AI Insights Tuan Nay</></span>
+            <span className="card-title"><><IconRobot size={16} /> AI Insights Tuần Này</></span>
           </div>
           <div className="card-body">
             {weeklyReports?.[0]?.aiSummary ? (

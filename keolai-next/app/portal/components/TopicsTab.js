@@ -12,10 +12,10 @@ function fmtDate(iso) {
 
 const STATUS_ORDER = ['pending', 'generating', 'published', 'error']
 const STATUS_CONFIG = {
-  pending:    { color: '#956400', bg: '#FBF3DB', title: 'Dang cho',  icon: IconClock },
-  generating: { color: '#1F6C9F', bg: '#E1F3FE', title: 'Dang tao',  icon: IconBolt },
-  published:  { color: '#346538', bg: '#EDF3EC', title: 'Da dang',   icon: IconCheck },
-  error:      { color: '#9F2F2D', bg: '#FDEBEC', title: 'Loi',       icon: IconX },
+  pending:    { color: '#956400', bg: '#FBF3DB', title: 'Đang chờ',  icon: IconClock },
+  generating: { color: '#1F6C9F', bg: '#E1F3FE', title: 'Đang tạo',  icon: IconBolt },
+  published:  { color: '#346538', bg: '#EDF3EC', title: 'Đã đăng',   icon: IconCheck },
+  error:      { color: '#9F2F2D', bg: '#FDEBEC', title: 'Lỗi',       icon: IconX },
 }
 
 export default function TopicsTab({ data, appSecret, onRefresh }) {
@@ -92,7 +92,7 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
       {replenishResult && (
         <div className={`alert ${replenishResult.ok ? 'alert-success' : 'alert-danger'}`}>
           <div className="alert-text">
-            <div className="alert-title">{replenishResult.ok ? 'Replenish thanh cong' : 'Replenish that bai'}</div>
+            <div className="alert-title">{replenishResult.ok ? 'Replenish thành công' : 'Replenish thất bại'}</div>
             <div className="alert-body">{JSON.stringify(replenishResult.data).slice(0, 200)}</div>
           </div>
         </div>
@@ -128,7 +128,7 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
           onClick={handleReplenish}
           disabled={replenishing}
         >
-          {replenishing ? <><IconClock size={16} /> Dang replenish...</> : <><IconRefresh size={16} /> Replenish Topics</>}
+          {replenishing ? <><IconClock size={16} /> Đang replenish...</> : <><IconRefresh size={16} /> Replenish Topics</>}
         </button>
         <span style={{ fontSize: 12, color: '#9E9C99' }}>
           Pipeline tự động chạy T2/T4/T6 lúc 6AM · Còn ~{daysRemaining} ngày
@@ -139,7 +139,7 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
       <div className="filter-bar">
         <input
           className="filter-input"
-          placeholder="Tim topic..."
+          placeholder="Tìm topic..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
