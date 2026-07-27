@@ -1,6 +1,7 @@
 'use client'
 import { useState, useMemo } from 'react'
 import { StatusBadge, CheckpointBadge } from './Charts'
+import { IconArticles, IconRobot, IconSeo, IconBarChart, IconInbox, IconSearch, IconTarget, IconChevronUp, IconChevronDown, IconCalendar, IconArrowUp, IconArrowDown, IconArrowsSort } from './Icons'
 
 function fmtDate(iso) {
   if (!iso) return '—'
@@ -86,7 +87,7 @@ export default function ArticlesTab({ data }) {
           <div className="kpi-label">Tổng bài viết</div>
         </div>
         <div className="kpi-card" style={{ '--kpi-color': '#3b82f6' }}>
-          <div className="kpi-icon">🤖</div>
+          <div className="kpi-icon"><IconRobot size={20} /></div>
           <div className="kpi-value">{totalAuto}</div>
           <div className="kpi-label">Auto-generated</div>
         </div>
@@ -112,8 +113,8 @@ export default function ArticlesTab({ data }) {
         />
         <select className="filter-select" value={sourceFilter} onChange={e => setSourceFilter(e.target.value)}>
           <option value="all">Tất cả nguồn</option>
-          <option value="auto">🤖 Auto</option>
-          <option value="cms">✍️ CMS</option>
+          <option value="auto">Auto</option>
+          <option value="cms">CMS</option>
           <option value="static">📄 Static</option>
         </select>
         <span style={{ fontSize: 13, color: '#94a3b8', whiteSpace: 'nowrap' }}>{filtered.length} bài</span>

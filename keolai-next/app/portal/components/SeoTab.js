@@ -1,5 +1,6 @@
 'use client'
 import { useState, useMemo } from 'react'
+import { IconFlask, IconSearch, IconEye, IconCursor, IconPin, IconInbox, StatusDot, IconArrowUp, IconArrowDown, IconArrowsSort } from './Icons'
 
 function fmtDate(iso) {
   if (!iso) return '—'
@@ -117,7 +118,7 @@ export default function SeoTab({ data }) {
           className={`btn ${activeView === 'experiments' ? 'btn-primary' : 'btn-outline'}`}
           onClick={() => setActiveView('experiments')}
         >
-          🧪 Experiments ({experiments.length})
+          <IconFlask size={16} /> Experiments ({experiments.length})
         </button>
       </div>
 
@@ -226,7 +227,7 @@ export default function SeoTab({ data }) {
                 <tr>
                   <td colSpan={7}>
                     <div className="portal-empty">
-                      <div className="portal-empty-icon">🧪</div>
+                      <div className="portal-empty-icon"><IconFlask size={24} /></div>
                       <div className="portal-empty-title">Chưa có experiment data</div>
                     </div>
                   </td>

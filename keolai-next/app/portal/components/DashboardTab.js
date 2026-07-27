@@ -1,6 +1,7 @@
 'use client'
 
-import { KpiCard, DonutChart, MiniBarChart, ProgressMeter } from './Charts'
+import { KpiCard, DonutChart, MiniBarChart } from './Charts'
+import { IconArticles, IconCalendar, IconLightbulb, IconUsers, IconCosts, IconTrend, IconTopics, IconInbox, IconSeo, IconBarChart, IconFire, IconRobot, IconBolt } from './Icons'
 
 const VND_PER_USD = 26500
 
@@ -21,9 +22,14 @@ function fmtWeekLabel(period) {
 
 export default function DashboardTab({ data, onAction }) {
   if (!data) return (
-    <div className="portal-loading">
-      <div className="portal-spinner" />
-      <span>Đang tải dữ liệu tổng quan...</span>
+    <div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: 12, marginBottom: 20 }}>
+        {[1,2,3,4].map(i => <div key={i} className="skeleton skeleton-kpi" />)}
+      </div>
+      <div className="dashboard-grid-2">
+        <div className="skeleton" style={{ height: 200, borderRadius: 'var(--p-radius)' }} />
+        <div className="skeleton" style={{ height: 200, borderRadius: 'var(--p-radius)' }} />
+      </div>
     </div>
   )
 
@@ -32,7 +38,7 @@ export default function DashboardTab({ data, onAction }) {
   // Topic donut chart data
   const topicDonut = [
     { label: 'Pending', value: topics?.pending || 0, color: '#f59e0b' },
-    { label: 'Published', value: topics?.published || 0, color: '#10b981' },
+    { label: 'Published', value: topics?.published || 0, color: '#2C6B4F' },
     { label: 'Generating', value: topics?.generating || 0, color: '#3b82f6' },
     { label: 'Error', value: topics?.error || 0, color: '#ef4444' },
   ].filter(d => d.value > 0)
@@ -44,28 +50,27 @@ export default function DashboardTab({ data, onAction }) {
   }))
 
   const costPct = cost ? (cost.spentUsd / cost.limitUsd) * 100 : 0
-  const costCls = costPct >= 90 ? 'danger' : costPct >= 70 ? 'warning' : ''
 
   // Alerts
   const alerts = []
   if (topics?.pending <= 3) {
     alerts.push({
       type: 'warning',
-      title: '⚠️ Topic sắp hết!',
+      title: 'Topic sap het!',
       body: `Chỉ còn ${topics.pending} topic đang chờ. Pipeline sẽ dừng nếu hết topic.`,
     })
   }
   if (costPct >= 90) {
     alerts.push({
       type: 'danger',
-      title: '🔴 Ngân sách AI gần hết!',
+      title: 'Ngan sach AI gan het!',
       body: `Đã dùng ${formatVnd(cost.spentUsd)} / ${formatVnd(cost.limitUsd)} (${costPct.toFixed(0)}%)`,
     })
   }
   if (topics?.error > 0) {
     alerts.push({
       type: 'warning',
-      title: `❌ ${topics.error} topic bị lỗi`,
+      title: `${topics.error} topic bi loi`,
       body: 'Vào tab Topics để xem chi tiết và retry.',
     })
   }
@@ -85,15 +90,15 @@ export default function DashboardTab({ data, onAction }) {
       {/* KPI Cards */}
       <div className="kpi-grid">
         <KpiCard
-          icon="📝"
+          icon={<IconArticles size={20} />}
           label="Tổng bài viết"
           value={articles?.total ?? '—'}
           delta={articles?.thisMonth}
           deltaLabel="tháng này"
-          color="#10b981"
+          color="#2C6B4F"
         />
         <KpiCard
-          icon="📅"
+          icon={<IconCalendar size={20} />}
           label="Bài tuần này"
           value={articles?.thisWeek ?? '—'}
           delta={articles?.thisWeek}
@@ -102,14 +107,14 @@ export default function DashboardTab({ data, onAction }) {
           bg="#dbeafe"
         />
         <KpiCard
-          icon="💡"
+          icon={<IconLightbulb size={20} />}
           label="Topic đang chờ"
           value={topics?.pending ?? '—'}
           color={topics?.pending <= 3 ? '#ef4444' : '#f59e0b'}
           bg={topics?.pending <= 3 ? '#fee2e2' : '#fef3c7'}
         />
         <KpiCard
-          icon="👥"
+          icon={<IconUsers size={20} />}
           label="Leads tuần này"
           value={leads?.thisWeek ?? '—'}
           delta={leads?.thisWeek}
@@ -124,15 +129,15 @@ export default function DashboardTab({ data, onAction }) {
         {/* Topic Health Donut */}
         <div className="card">
           <div className="card-header">
-            <span className="card-title">💡 Topic Queue Health</span>
+            <span className="card-title"><><IconLightbulb size={16} /> Topic Queue Health</></span>
           </div>
           <div className="card-body">
             {topicDonut.length > 0 ? (
               <DonutChart data={topicDonut} size={140} />
             ) : (
               <div className="portal-empty">
-                <div className="portal-empty-icon">📭</div>
-                <div className="portal-empty-title">Chưa có topic</div>
+                <div className="portal-empty-icon"><IconInbox size={24} /></div>
+                <div className="portal-empty-title">Chua co topic</div>
               </div>
             )}
           </div>
@@ -141,7 +146,7 @@ export default function DashboardTab({ data, onAction }) {
         {/* Cost Meter */}
         <div className="card">
           <div className="card-header">
-            <span className="card-title">💰 Chi Phí AI Tháng Này</span>
+            <span className="card-title"><><IconCosts size={16} /> Chi Phi AI Thang Nay</></span>
           </div>
           <div className="card-body">
             <div style={{ marginBottom: 16 }}>
@@ -149,28 +154,22 @@ export default function DashboardTab({ data, onAction }) {
                 <span style={{ fontFamily: 'var(--p-font-mono)', fontVariantNumeric: 'tabular-nums', fontSize: 32, fontWeight: 700, letterSpacing: '-0.01em', color: costPct >= 90 ? '#ef4444' : '#182420' }}>
                   {formatVnd(cost?.spentUsd || 0)}
                 </span>
-                <span style={{ fontSize: 13, color: '#94a3b8' }}>/ {formatVnd(cost?.limitUsd || 1.85)}</span>
+                <span style={{ fontSize: 13, color: '#9E9C99' }}>/ {formatVnd(cost?.limitUsd || 1.85)}</span>
               </div>
-              <span style={{ fontSize: 12, color: '#94a3b8' }}>{formatUsd(cost?.spentUsd || 0)} USD</span>
+              <span style={{ fontSize: 12, color: '#9E9C99' }}>{formatUsd(cost?.spentUsd || 0)} USD</span>
             </div>
-            <ProgressMeter
-              value={cost?.spentUsd || 0}
-              max={cost?.limitUsd || 1.85}
-              label={`Đã dùng: ${costPct.toFixed(1)}%`}
-              showPct={false}
-            />
-            <div style={{ marginTop: 8, fontSize: 12, color: '#94a3b8' }}>
+            <div style={{ marginTop: 8, fontSize: 12, color: '#9E9C99' }}>
               Còn lại: {formatVnd((cost?.limitUsd || 1.85) - (cost?.spentUsd || 0))}
             </div>
 
             {/* Model breakdown */}
             {cost?.breakdown && (
-              <div style={{ marginTop: 16, borderTop: '1px solid #f1f5f9', paddingTop: 12 }}>
+              <div style={{ marginTop: 16, borderTop: '1px solid #F0EFEC', paddingTop: 12 }}>
                 {Object.entries(cost.breakdown)
                   .filter(([k]) => k !== 'updatedAt')
                   .map(([model, usage]) => (
                     <div key={model} style={{ display: 'flex', justifyContent: 'space-between', fontSize: 12, marginBottom: 4 }}>
-                      <span style={{ color: '#64748b', fontFamily: 'monospace' }}>{model.replace('gemini-', 'G-').replace('claude-', 'C-')}</span>
+                      <span style={{ color: '#787774', fontFamily: 'monospace' }}>{model.replace('gemini-', 'G-').replace('claude-', 'C-')}</span>
                       <span style={{ fontWeight: 600 }}>{usage.calls || 0} calls</span>
                     </div>
                   ))}
@@ -185,23 +184,23 @@ export default function DashboardTab({ data, onAction }) {
         {/* Weekly Trend Chart */}
         <div className="card">
           <div className="card-header">
-            <span className="card-title">📈 Bài viết theo tuần</span>
+            <span className="card-title"><><IconTrend size={16} /> Bai Viet Theo Tuan</></span>
             <span className="card-subtitle">4 tuần gần nhất</span>
           </div>
           <div className="card-body">
             {weeklyBars.length > 0 ? (
               <>
-                <MiniBarChart data={weeklyBars} color="#10b981" height={80} />
+                <MiniBarChart data={weeklyBars} color="#2C6B4F" height={80} />
                 <div style={{ display: 'grid', gridTemplateColumns: `repeat(${weeklyBars.length}, 1fr)`, marginTop: 4 }}>
                   {weeklyBars.map((b, i) => (
-                    <div key={i} style={{ textAlign: 'center', fontSize: 11, color: '#94a3b8' }}>
+                    <div key={i} style={{ textAlign: 'center', fontSize: 11, color: '#9E9C99' }}>
                       {b.value} bài
                     </div>
                   ))}
                 </div>
               </>
             ) : (
-              <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#94a3b8', fontSize: 13 }}>
+              <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#9E9C99', fontSize: 13 }}>
                 Chưa có báo cáo tuần
               </div>
             )}
@@ -211,7 +210,7 @@ export default function DashboardTab({ data, onAction }) {
         {/* Quick Actions + Latest AI Summary */}
         <div className="card">
           <div className="card-header">
-            <span className="card-title">🤖 AI Insights Tuần Này</span>
+            <span className="card-title"><><IconRobot size={16} /> AI Insights Tuan Nay</></span>
           </div>
           <div className="card-body">
             {weeklyReports?.[0]?.aiSummary ? (
@@ -219,12 +218,12 @@ export default function DashboardTab({ data, onAction }) {
                 {weeklyReports[0].aiSummary}
               </div>
             ) : (
-              <div style={{ color: '#94a3b8', fontSize: 13, padding: '20px 0' }}>
+              <div style={{ color: '#9E9C99', fontSize: 13, padding: '20px 0' }}>
                 Chưa có AI insights. Báo cáo tuần được tạo mỗi thứ Hai lúc 8AM.
               </div>
             )}
             {weeklyReports?.[0]?.period && (
-              <div style={{ marginTop: 12, fontSize: 11, color: '#94a3b8' }}>
+              <div style={{ marginTop: 12, fontSize: 11, color: '#9E9C99' }}>
                 Kỳ: {weeklyReports[0].period}
               </div>
             )}
@@ -235,11 +234,11 @@ export default function DashboardTab({ data, onAction }) {
       {/* Quick Actions */}
       <div className="card" style={{ marginTop: 20 }}>
         <div className="card-header">
-          <span className="card-title">⚡ Quick Actions</span>
+          <span className="card-title"><><IconBolt size={16} /> Quick Actions</></span>
         </div>
         <div className="card-body" style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <button className="btn btn-primary" onClick={() => onAction?.('tab-topics')}>
-            💡 Xem Topic Queue
+            <><IconTopics size={16} /> Xem Topic Queue</>
           </button>
           <a
             href="https://search.google.com/search-console"
@@ -247,7 +246,7 @@ export default function DashboardTab({ data, onAction }) {
             rel="noopener noreferrer"
             className="btn btn-outline"
           >
-            🔍 Google Search Console ↗
+            <><IconSeo size={16} /> Google Search Console</>
           </a>
           <a
             href="https://console.firebase.google.com/project/keolai-63ec1"
@@ -255,7 +254,7 @@ export default function DashboardTab({ data, onAction }) {
             rel="noopener noreferrer"
             className="btn btn-outline"
           >
-            🔥 Firebase Console ↗
+            <><IconFire size={16} /> Firebase Console</>
           </a>
           <a
             href="https://analytics.google.com"
@@ -263,7 +262,7 @@ export default function DashboardTab({ data, onAction }) {
             rel="noopener noreferrer"
             className="btn btn-outline"
           >
-            📊 GA4 ↗
+            <><IconBarChart size={16} /> GA4</>
           </a>
         </div>
       </div>

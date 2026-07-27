@@ -1,6 +1,7 @@
 'use client'
 import { useState, useMemo } from 'react'
 import { StatusBadge } from './Charts'
+import { IconClock, IconBolt, IconCheck, IconX, IconRefresh, IconSearch, IconLightbulb, IconInbox, IconLink, IconExternal, IconWarning, StatusDot } from './Icons'
 
 const FUNCTIONS_BASE = 'https://us-central1-keolai-63ec1.cloudfunctions.net'
 
@@ -11,10 +12,10 @@ function fmtDate(iso) {
 
 const STATUS_ORDER = ['pending', 'generating', 'published', 'error']
 const STATUS_CONFIG = {
-  pending:    { color: '#f59e0b', bg: '#fef3c7', title: 'Đang chờ', icon: '⏳' },
-  generating: { color: '#3b82f6', bg: '#dbeafe', title: 'Đang tạo', icon: '⚡' },
-  published:  { color: '#10b981', bg: '#d1fae5', title: 'Đã đăng',  icon: '✅' },
-  error:      { color: '#ef4444', bg: '#fee2e2', title: 'Lỗi',      icon: '❌' },
+  pending:    { color: '#956400', bg: '#FBF3DB', title: 'Dang cho',  icon: IconClock },
+  generating: { color: '#1F6C9F', bg: '#E1F3FE', title: 'Dang tao',  icon: IconBolt },
+  published:  { color: '#346538', bg: '#EDF3EC', title: 'Da dang',   icon: IconCheck },
+  error:      { color: '#9F2F2D', bg: '#FDEBEC', title: 'Loi',       icon: IconX },
 }
 
 export default function TopicsTab({ data, appSecret, onRefresh }) {
@@ -24,9 +25,10 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
   const [replenishResult, setReplenishResult] = useState(null)
 
   if (!data) return (
-    <div className="portal-loading">
-      <div className="portal-spinner" />
-      <span>Đang tải topics...</span>
+    <div className="portal-loading-skeleton" style={{ padding: 24 }}>
+      <div className="skeleton-kpi-grid">
+        {[1,2,3,4].map(i => <div key={i} className="skeleton-card" style={{ height: 100 }} />)}
+      </div>
     </div>
   )
 
@@ -75,7 +77,7 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
       {/* Alert nếu gần hết topic */}
       {pending <= 3 && (
         <div className="alert alert-warning">
-          <div className="alert-icon">⚠️</div>
+          <div className="alert-icon"><IconWarning size={16} /></div>
           <div className="alert-text">
             <div className="alert-title">
               {pending === 0 ? 'Hết topic! Pipeline sẽ dừng.' : `Chỉ còn ${pending} topic đang chờ`}
@@ -90,7 +92,7 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
       {replenishResult && (
         <div className={`alert ${replenishResult.ok ? 'alert-success' : 'alert-danger'}`}>
           <div className="alert-text">
-            <div className="alert-title">{replenishResult.ok ? '✅ Replenish thành công' : '❌ Replenish thất bại'}</div>
+            <div className="alert-title">{replenishResult.ok ? 'Replenish thanh cong' : 'Replenish that bai'}</div>
             <div className="alert-body">{JSON.stringify(replenishResult.data).slice(0, 200)}</div>
           </div>
         </div>
@@ -108,7 +110,7 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
               style={{ '--kpi-color': c.color, cursor: 'pointer' }}
               onClick={() => setFilter(filter === s ? 'all' : s)}
             >
-              <div className="kpi-icon" style={{ background: c.bg, color: c.color }}>{c.icon}</div>
+              <div className="kpi-icon" style={{ background: c.bg, color: c.color }}><c.icon size={20} /></div>
               <div className="kpi-value">{count}</div>
               <div className="kpi-label">{c.title}</div>
               {filter === s && (
@@ -126,9 +128,9 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
           onClick={handleReplenish}
           disabled={replenishing}
         >
-          {replenishing ? '⏳ Đang replenish...' : '🔄 Replenish Topics'}
+          {replenishing ? <><IconClock size={16} /> Dang replenish...</> : <><IconRefresh size={16} /> Replenish Topics</>}
         </button>
-        <span style={{ fontSize: 12, color: '#94a3b8' }}>
+        <span style={{ fontSize: 12, color: '#9E9C99' }}>
           Pipeline tự động chạy T2/T4/T6 lúc 6AM · Còn ~{daysRemaining} ngày
         </span>
       </div>
@@ -137,7 +139,7 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
       <div className="filter-bar">
         <input
           className="filter-input"
-          placeholder="🔍 Tìm topic..."
+          placeholder="Tim topic..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -149,11 +151,11 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
           <option value="all">Tất cả ({topics.length})</option>
           {STATUS_ORDER.map(s => (
             <option key={s} value={s}>
-              {STATUS_CONFIG[s].icon} {STATUS_CONFIG[s].title} ({topics.filter(t => t.status === s).length})
+              {STATUS_CONFIG[s].title} ({topics.filter(t => t.status === s).length})
             </option>
           ))}
         </select>
-        <span style={{ fontSize: 13, color: '#94a3b8', whiteSpace: 'nowrap' }}>{filtered.length} topics</span>
+        <span style={{ fontSize: 13, color: '#9E9C99', whiteSpace: 'nowrap' }}>{filtered.length} topics</span>
       </div>
 
       {/* Kanban View */}
@@ -166,7 +168,7 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
               <div key={s} className="kanban-col">
                 <div className="kanban-col-header">
                   <div className="kanban-col-title" style={{ color: c.color }}>
-                    {c.icon} {c.title}
+                    <c.icon size={14} /> {c.title}
                   </div>
                   <div className="kanban-col-count">{cols.length}</div>
                 </div>
@@ -175,12 +177,12 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
                     <div className="kanban-card-title">{topic.title}</div>
                     <div className="kanban-card-meta">
                       {topic.status === 'published' && topic.url ? (
-                        <a href={topic.url} target="_blank" rel="noopener noreferrer" style={{ color: '#10b981', fontSize: 11 }}>
-                          🔗 Xem bài viết
+                        <a href={topic.url} target="_blank" rel="noopener noreferrer" style={{ color: '#2C6B4F', fontSize: 11 }}>
+                          <IconLink size={12} /> Xem bài viết
                         </a>
                       ) : topic.status === 'error' ? (
-                        <span style={{ color: '#ef4444', fontSize: 11 }}>
-                          ⚠️ {(topic.errorMessage || '').slice(0, 60)}
+                        <span style={{ color: '#9F2F2D', fontSize: 11 }}>
+                          <IconWarning size={12} /> {(topic.errorMessage || '').slice(0, 60)}
                         </span>
                       ) : (
                         <span>P{topic.priority || 0} · {Array.isArray(topic.keywords) ? topic.keywords.slice(0, 2).join(', ') : topic.keywords || topic.label || ''}</span>
@@ -189,12 +191,12 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
                   </div>
                 ))}
                 {cols.length > 15 && (
-                  <div style={{ fontSize: 12, color: '#94a3b8', padding: '8px 4px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 12, color: '#9E9C99', padding: '8px 4px', textAlign: 'center' }}>
                     +{cols.length - 15} nữa...
                   </div>
                 )}
                 {cols.length === 0 && (
-                  <div style={{ fontSize: 12, color: '#94a3b8', padding: '16px 4px', textAlign: 'center' }}>
+                  <div style={{ fontSize: 12, color: '#9E9C99', padding: '16px 4px', textAlign: 'center' }}>
                     Trống
                   </div>
                 )}
@@ -220,7 +222,7 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
                 <tr>
                   <td colSpan={5}>
                     <div className="portal-empty">
-                      <div className="portal-empty-icon">📭</div>
+                      <div className="portal-empty-icon"><IconInbox size={24} /></div>
                       <div className="portal-empty-title">Không tìm thấy topic</div>
                     </div>
                   </td>
@@ -234,12 +236,12 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
                   </td>
                   <td><StatusBadge status={topic.status} /></td>
                   <td>
-                    <span style={{ fontWeight: 700, color: topic.priority >= 8 ? '#ef4444' : '#64748b' }}>
+                    <span style={{ fontWeight: 700, color: topic.priority >= 8 ? '#9F2F2D' : '#787774' }}>
                       {topic.priority || 0}
                     </span>
                   </td>
                   <td>
-                    <div style={{ maxWidth: 200, fontSize: 12, color: '#64748b' }}>
+                    <div style={{ maxWidth: 200, fontSize: 12, color: '#787774' }}>
                       {Array.isArray(topic.keywords)
                         ? topic.keywords.slice(0, 3).join(', ')
                         : topic.keywords || '—'}
@@ -247,12 +249,12 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
                   </td>
                   <td>
                     {topic.status === 'error' ? (
-                      <span style={{ fontSize: 12, color: '#ef4444' }}>
+                      <span style={{ fontSize: 12, color: '#9F2F2D' }}>
                         {(topic.errorMessage || 'Unknown error').slice(0, 80)}
                       </span>
                     ) : topic.status === 'published' && topic.url ? (
                       <a href={topic.url} target="_blank" rel="noopener noreferrer" className="td-link" style={{ fontSize: 12 }}>
-                        {fmtDate(topic.publishedAt)} ↗
+                        {fmtDate(topic.publishedAt)} <IconExternal size={12} />
                       </a>
                     ) : (
                       <span className="td-muted">{fmtDate(topic.scheduledAt)}</span>
