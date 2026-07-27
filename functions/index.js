@@ -652,6 +652,7 @@ exports.scheduleContentGeneration = functions.https.onRequest(
 
       // Generate content via Vertex AI
       const apiKey = vertexApiKey.value();
+      const genYear = new Date().getFullYear();
       const prompt = `Bạn là chuyên gia lâm nghiệp Việt Nam. Viết một bài hướng dẫn kỹ thuật về chủ đề: "${topic.title}".
 
 Yêu cầu:
@@ -663,6 +664,7 @@ Yêu cầu:
 - Phù hợp cho nông dân và người trồng rừng
 - KHÔNG sử dụng markdown format đặc biệt (bold, italic). Chỉ dùng heading ## và ###
 - Mỗi paragraph ngắn gọn 2-4 câu
+- Năm hiện tại là ${genYear}. Nếu bài có nhắc đến năm cụ thể (giá cả, xu hướng, "hiện nay", "năm nay"...), PHẢI dùng ${genYear} — TUYỆT ĐỐI KHÔNG dùng năm đã qua như 2025 trừ khi đang nói về sự kiện lịch sử rõ ràng thuộc năm đó.
 
 Trả về nội dung bài viết thuần túy (không có tiêu đề ở đầu).`;
 
@@ -1848,10 +1850,11 @@ exports.autoReplenishTopics = functions.https.onRequest(
       // Determine current season context
       const now = new Date();
       const currentMonth = now.getMonth() + 1;
+      const currentYear = now.getFullYear();
       const campaign = SEASONAL_CAMPAIGNS[currentMonth];
       const seasonContext = campaign
-        ? `Hiện đang tháng ${currentMonth}, mùa vụ: ${campaign.theme} (${campaign.region}).`
-        : `Hiện đang tháng ${currentMonth}.`;
+        ? `Hiện đang tháng ${currentMonth} năm ${currentYear}, mùa vụ: ${campaign.theme} (${campaign.region}).`
+        : `Hiện đang tháng ${currentMonth} năm ${currentYear}.`;
 
       // ── NEW Phase 2: Read brain context for data-driven topics ──
       let brainContext = '';
@@ -1910,6 +1913,8 @@ Yêu cầu mỗi chủ đề:
 6. label: Phân loại (Kỹ thuật / Mùa vụ / Kinh nghiệm / Phòng bệnh / Kinh tế)
 
 Đa dạng chủ đề: kỹ thuật trồng, chăm sóc, phòng bệnh, kinh tế lâm nghiệp, kinh nghiệm thực tế.
+
+QUAN TRỌNG: Năm hiện tại là ${currentYear}. Nếu title/description có nhắc đến năm cụ thể (bảng giá, xu hướng, dự báo...), PHẢI dùng ${currentYear} (hoặc ${currentYear}-${currentYear + 1} cho xu hướng nhiều năm) — TUYỆT ĐỐI KHÔNG dùng năm đã qua như 2025.
 
 Trả về JSON array, KHÔNG có markdown block. Ví dụ:
 [{"title":"...","slug":"...","keywords":"...","description":"...","priority":8,"label":"Kỹ thuật"}]`;
