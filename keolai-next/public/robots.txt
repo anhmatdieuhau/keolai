@@ -11,6 +11,8 @@ Sitemap: https://keolaigiamhom.vn/sitemap.xml
 Disallow: /api/
 Disallow: /_next/
 Disallow: /404
+Disallow: /cms
+Disallow: /portal
 
 # Allow search engines to crawl all content
 User-agent: Googlebot

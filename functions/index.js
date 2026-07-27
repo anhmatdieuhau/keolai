@@ -5,7 +5,9 @@ const cors = require('cors')({
     'https://keolaigiamhom.vn',
     'https://www.keolaigiamhom.vn',
     'https://keolai-63ec1.web.app',
-    'https://keolai-63ec1.firebaseapp.com'
+    'https://keolai-63ec1.firebaseapp.com',
+    'http://localhost:3000',
+    'http://localhost:3001',
   ]
 });
 const admin = require('firebase-admin');
@@ -3568,3 +3570,284 @@ exports.contentAnalytics = functions.https.onRequest(
 // ═══════════════════════════════════════
 // 9. PIPELINE DEADLOCK PREVENTION
 // ═══════════════════════════════════════
+
+// ═══════════════════════════════════════
+// PORTAL DATA API
+// Aggregates data from multiple Firestore collections for the Operations Portal
+// ?section=overview|articles|seo|topics|costs
+// Auth: x-app-secret header (same shared secret as other admin endpoints)
+// ═══════════════════════════════════════
+exports.portalData = functions.https.onRequest(
+  {
+    region: 'us-central1',
+    timeoutSeconds: 30,
+    memory: '256MiB',
+    secrets: [appClientSecret],
+  },
+  async (req, res) => {
+    cors(req, res, async () => {
+      try {
+        const hasSecret = req.headers['x-app-secret'] === appClientSecret.value();
+        if (!hasSecret) {
+          return res.status(403).json({ error: 'Unauthorized' });
+        }
+
+        const section = req.query.section || 'overview';
+
+        function safeDate(ts) {
+          try { return ts?.toDate?.()?.toISOString() || null; } catch { return null; }
+        }
+
+        function monthKey(date = new Date()) {
+          return date.toISOString().slice(0, 7);
+        }
+
+        switch (section) {
+          case 'overview': {
+            const now = new Date();
+            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+            const [articlesSnap, topicsSnap, leadsSnap, costSnap, weeklySnap] = await Promise.all([
+              db.collection('articles').get(),
+              db.collection('topics').get(),
+              db.collection('leads').orderBy('createdAt', 'desc').limit(100).get(),
+              db.collection('metrics').doc('costGuard').collection('months').doc(monthKey()).get(),
+              db.collection('weekly_reports').orderBy('sentAt', 'desc').limit(5).get(),
+            ]);
+
+            const activeArticles = articlesSnap.docs.filter(d => !d.data().retired && !d.data().redirectTo);
+            const allTopics = topicsSnap.docs.map(d => d.data());
+
+            const articlesThisWeek = activeArticles.filter(d => {
+              try { return d.data().publishedAt?.toDate() > weekAgo; } catch { return false; }
+            });
+            const articlesThisMonth = activeArticles.filter(d => {
+              try { return d.data().publishedAt?.toDate() > monthAgo; } catch { return false; }
+            });
+            const leadsThisWeek = leadsSnap.docs.filter(d => {
+              try { return d.data().createdAt?.toDate() > weekAgo; } catch { return false; }
+            });
+
+            const costData = costSnap.exists ? costSnap.data() : {};
+            // Compute total cost
+            const RATES = {
+              'gemini-3.6-flash': { in: 1.5, out: 7.0 },
+              'gemini-3.1-flash-lite': { in: 0.25, out: 1.5 },
+              'gemini-3.0-flash-lite': { in: 0.25, out: 1.5 },
+              'claude-sonnet-5': { in: 2.0, out: 10.0 },
+            };
+            let totalCostUsd = 0;
+            for (const [model, u] of Object.entries(costData)) {
+              if (model === 'updatedAt' || !u || typeof u !== 'object') continue;
+              const rate = RATES[model];
+              if (rate) totalCostUsd += (u.tokensIn / 1e6) * rate.in + (u.tokensOut / 1e6) * rate.out;
+            }
+
+            return res.status(200).json({
+              articles: {
+                total: activeArticles.length,
+                thisWeek: articlesThisWeek.length,
+                thisMonth: articlesThisMonth.length,
+              },
+              topics: {
+                total: allTopics.length,
+                pending: allTopics.filter(t => t.status === 'pending').length,
+                generating: allTopics.filter(t => t.status === 'generating').length,
+                published: allTopics.filter(t => t.status === 'published').length,
+                error: allTopics.filter(t => t.status === 'error').length,
+              },
+              leads: {
+                total: leadsSnap.size,
+                thisWeek: leadsThisWeek.length,
+              },
+              cost: {
+                spentUsd: Math.round(totalCostUsd * 10000) / 10000,
+                limitUsd: 1.85,
+                breakdown: costData,
+              },
+              weeklyReports: weeklySnap.docs.map(d => {
+                const data = d.data();
+                return {
+                  id: d.id,
+                  period: data.period,
+                  newLeads: data.newLeads,
+                  newArticles: data.newArticles,
+                  totalArticles: data.totalArticles,
+                  pendingTopics: data.pendingTopics,
+                  aiSummary: data.aiSummary,
+                  sentAt: safeDate(data.sentAt),
+                };
+              }),
+            });
+          }
+
+          case 'articles': {
+            const [articlesSnap, experimentsSnap] = await Promise.all([
+              db.collection('articles').orderBy('publishedAt', 'desc').get(),
+              db.collection('brain_experiments').get(),
+            ]);
+
+            const experiments = {};
+            experimentsSnap.docs.forEach(d => { experiments[d.id] = d.data(); });
+
+            const articles = articlesSnap.docs
+              .filter(d => !d.data().retired && !d.data().redirectTo)
+              .map(d => {
+                const data = d.data();
+                const exp = experiments[d.id];
+                return {
+                  slug: d.id,
+                  title: data.title,
+                  description: data.description,
+                  url: data.url,
+                  publishedAt: safeDate(data.publishedAt),
+                  publishedDate: data.publishedDate,
+                  source: data.source || 'static',
+                  experiment: exp ? {
+                    status: exp.status,
+                    targetKeyword: exp.targetKeyword,
+                    c1: {
+                      scheduledAt: safeDate(exp.c1?.scheduledAt),
+                      executedAt: safeDate(exp.c1?.executedAt),
+                      indexed: exp.c1?.indexed,
+                      verdict: exp.c1?.verdict,
+                      coverageState: exp.c1?.coverageState,
+                    },
+                    c2: {
+                      scheduledAt: safeDate(exp.c2?.scheduledAt),
+                      executedAt: safeDate(exp.c2?.executedAt),
+                      position: exp.c2?.position,
+                      impressions: exp.c2?.impressions,
+                      clicks: exp.c2?.clicks,
+                      ctr: exp.c2?.ctr,
+                      hasData: exp.c2?.hasData,
+                    },
+                    c3: {
+                      scheduledAt: safeDate(exp.c3?.scheduledAt),
+                      executedAt: safeDate(exp.c3?.executedAt),
+                    },
+                  } : null,
+                };
+              });
+
+            return res.status(200).json({ articles });
+          }
+
+          case 'seo': {
+            const [keywordsSnap, experimentsSnap] = await Promise.all([
+              db.collection('brain_keywords').orderBy('impressions', 'desc').limit(200).get(),
+              db.collection('brain_experiments').get(),
+            ]);
+
+            return res.status(200).json({
+              keywords: keywordsSnap.docs.map(d => ({ id: d.id, ...d.data() })),
+              experiments: experimentsSnap.docs.map(d => {
+                const data = d.data();
+                return {
+                  id: d.id,
+                  slug: data.slug,
+                  targetKeyword: data.targetKeyword,
+                  articleUrl: data.articleUrl,
+                  status: data.status,
+                  publishedAt: safeDate(data.publishedAt),
+                  c1: {
+                    scheduledAt: safeDate(data.c1?.scheduledAt),
+                    executedAt: safeDate(data.c1?.executedAt),
+                    indexed: data.c1?.indexed,
+                    verdict: data.c1?.verdict,
+                  },
+                  c2: {
+                    scheduledAt: safeDate(data.c2?.scheduledAt),
+                    executedAt: safeDate(data.c2?.executedAt),
+                    position: data.c2?.position,
+                    impressions: data.c2?.impressions,
+                    clicks: data.c2?.clicks,
+                  },
+                  c3: {
+                    scheduledAt: safeDate(data.c3?.scheduledAt),
+                    executedAt: safeDate(data.c3?.executedAt),
+                  },
+                };
+              }),
+            });
+          }
+
+          case 'topics': {
+            const topicsSnap = await db.collection('topics').orderBy('priority', 'desc').get();
+            return res.status(200).json({
+              topics: topicsSnap.docs.map(d => {
+                const data = d.data();
+                return {
+                  id: d.id,
+                  title: data.title,
+                  slug: data.slug,
+                  status: data.status,
+                  priority: data.priority,
+                  keywords: data.keywords,
+                  description: data.description,
+                  label: data.label,
+                  publishedAt: safeDate(data.publishedAt),
+                  scheduledAt: safeDate(data.scheduledAt),
+                  errorMessage: data.errorMessage,
+                  url: data.url,
+                };
+              }),
+            });
+          }
+
+          case 'costs': {
+            const monthsSnap = await db.collection('metrics').doc('costGuard')
+              .collection('months').get();
+
+            const RATES = {
+              'gemini-3.6-flash': { in: 1.5, out: 7.0 },
+              'gemini-3.1-flash-lite': { in: 0.25, out: 1.5 },
+              'gemini-3.0-flash-lite': { in: 0.25, out: 1.5 },
+              'claude-sonnet-5': { in: 2.0, out: 10.0 },
+            };
+
+            const months = monthsSnap.docs
+              .sort((a, b) => a.id.localeCompare(b.id))
+              .map(d => {
+                const data = d.data();
+                let totalUsd = 0;
+                const modelBreakdown = {};
+                for (const [model, u] of Object.entries(data)) {
+                  if (model === 'updatedAt' || !u || typeof u !== 'object') continue;
+                  const rate = RATES[model];
+                  if (!rate) continue;
+                  const costUsd = (u.tokensIn / 1e6) * rate.in + (u.tokensOut / 1e6) * rate.out;
+                  totalUsd += costUsd;
+                  modelBreakdown[model] = {
+                    calls: u.calls,
+                    tokensIn: u.tokensIn,
+                    tokensOut: u.tokensOut,
+                    costUsd: Math.round(costUsd * 100000) / 100000,
+                  };
+                }
+                return {
+                  month: d.id,
+                  totalUsd: Math.round(totalUsd * 100000) / 100000,
+                  updatedAt: data.updatedAt,
+                  models: modelBreakdown,
+                };
+              });
+
+            return res.status(200).json({
+              months,
+              limitUsd: 1.85,
+              rates: RATES,
+            });
+          }
+
+          default:
+            return res.status(400).json({ error: `Unknown section: ${section}` });
+        }
+      } catch (err) {
+        logger.error('❌ [portalData] Failed:', err);
+        return res.status(500).json({ error: err.message });
+      }
+    });
+  }
+);

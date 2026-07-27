@@ -6,20 +6,23 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signO
 
 // Firebase config — reuse existing project
 const firebaseConfig = {
-  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY || 'demo-key',
+  apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
   authDomain: 'keolai-63ec1.firebaseapp.com',
   projectId: 'keolai-63ec1',
   storageBucket: 'keolai-63ec1.firebasestorage.app',
-  messagingSenderId: '0',
-  appId: '1:0:web:0',
+  messagingSenderId: '675411800433',
+  appId: '1:675411800433:web:8b5f7e40ce80504a5f46d0',
+  measurementId: 'G-HTM7BNXXJ7',
 }
 
 let app, auth
-try {
-  app = initializeApp(firebaseConfig, 'cms')
-  auth = getAuth(app)
-} catch (err) {
-  try { app = initializeApp(firebaseConfig); auth = getAuth(app) } catch (e) { /* demo mode */ }
+if (firebaseConfig.apiKey) {
+  try {
+    app = initializeApp(firebaseConfig, 'cms')
+    auth = getAuth(app)
+  } catch (err) {
+    try { app = initializeApp(firebaseConfig); auth = getAuth(app) } catch (e) { /* demo mode */ }
+  }
 }
 
 const provider = new GoogleAuthProvider()
