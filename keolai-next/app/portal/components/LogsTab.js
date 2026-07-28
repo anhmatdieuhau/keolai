@@ -233,8 +233,8 @@ export default function LogsTab({ data }) {
       {gsc && (
         <div className="card" style={{ marginBottom: 20 }}>
           <div className="card-header">
-            <span className="card-title"><IconTrend size={16} /> Hiệu quả SEO — Google Search Console</span>
-            <span className="card-subtitle">{gsc.totalTracked} bài tracked</span>
+            <span className="card-title"><IconTrend size={16} /> Google Search Console — 28 ngày</span>
+            <span className="card-subtitle">{gsc.totalImpressions?.toLocaleString('vi-VN') || 0} imp · {gsc.totalClicks?.toLocaleString('vi-VN') || 0} clicks · avg pos {gsc.avgPosition}</span>
           </div>
           <div className="card-body">
             {/* GSC KPI row */}
@@ -271,17 +271,22 @@ export default function LogsTab({ data }) {
               fontSize: 13, lineHeight: 1.7, color: 'var(--p-text-2)',
             }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--p-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
-                Tóm tắt tình hình
+                Google Search Console — 28 ngày
               </div>
-              Đang theo dõi <strong>{gsc.totalTracked} bài</strong> trên Google Search Console.
-              Có <strong style={{ color: 'var(--p-success)' }}>{gsc.withRankData} bài</strong> đã có dữ liệu rank (C2 checkpoint), trong đó
-              {' '}<strong style={{ color: 'var(--p-info)' }}>{gsc.top10} bài lọt top 10</strong>,{' '}
-              <strong style={{ color: 'var(--p-info)' }}>{gsc.top3} bài lọt top 3</strong>.
-              Tổng cộng <strong>{gsc.totalImpressions.toLocaleString('vi-VN')} impressions</strong> và{' '}
-              <strong>{gsc.totalClicks.toLocaleString('vi-VN')} clicks</strong> (CTR trung bình {gsc.avgCtr}%).
-              Vị trí trung bình: <strong>{gsc.avgPosition}</strong>.
-              {gsc.top3 === 0 ? ' Chưa có bài nào lọt top 3 — cần thêm thời gian để index và leo rank.' : ''}
-              {gsc.indexed < gsc.totalTracked ? ` Còn ${gsc.totalTracked - gsc.indexed} bài chưa được index.` : ''}
+              <strong>{gsc.totalImpressions.toLocaleString('vi-VN')} impressions</strong>,{' '}
+              <strong>{gsc.totalClicks.toLocaleString('vi-VN')} clicks</strong>{' '}
+              (CTR {gsc.avgCtr}%, vị trí TB {gsc.avgPosition}).
+              {(gsc.trendClickPct !== 0 || gsc.trendImprPct !== 0) && (
+                <span> So với 28 ngày trước:{' '}
+                  <strong style={{ color: gsc.trendClickPct > 0 ? 'var(--p-success)' : 'var(--p-danger)' }}>
+                    clicks {gsc.trendClickPct > 0 ? '+' : ''}{gsc.trendClickPct}%
+                  </strong>,{' '}
+                  <strong style={{ color: gsc.trendImprPct > 0 ? 'var(--p-success)' : 'var(--p-danger)' }}>
+                    impressions {gsc.trendImprPct > 0 ? '+' : ''}{gsc.trendImprPct}%
+                  </strong>.
+                </span>
+              )}
+              {' '}Dữ liệu từ Google Search Console API.
             </div>
 
             {/* Top articles + Top queries side by side */}

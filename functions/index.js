@@ -3924,46 +3924,43 @@ exports.portalData = functions.https.onRequest(
             const allTopics = topicsSnap.docs.map(d => d.data());
             const activeArticles = articlesSnap.docs.filter(d => !d.data().retired && !d.data().redirectTo);
 
-            // GSC performance — live query from Google Search Console API
+            // GSC performance — TRUE totals from aggregate query + breakdown
             let gscSummary = {
               totalTracked: 0, withRankData: 0, indexed: 0,
               top10: 0, top3: 0, totalImpressions: 0, totalClicks: 0,
               avgCtr: '0', avgPosition: '—', topArticles: [], topQueries: [],
+              trendImprPct: 0, trendClickPct: 0,
             };
             try {
               const { GoogleAuth } = require('google-auth-library');
               const gscAuth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/webmasters.readonly'] });
               const gscClient = await gscAuth.getClient();
-              const searchconsole = google.searchconsole({ version: 'v1', auth: gscClient });
+              const sc = google.searchconsole({ version: 'v1', auth: gscClient });
 
-              // Site-level aggregate query — last 30 days
-              const gscRes = await searchconsole.searchanalytics.query({
-                siteUrl: GSC_SITE_URL,
-                requestBody: {
-                  startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-                  endDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-                  dimensions: ['query'],
-                  rowLimit: 50,
-                },
-              });
-              const gscRows = gscRes.data.rows || [];
-              const totalImpressions = gscRows.reduce((s, r) => s + r.impressions, 0);
-              const totalClicks = gscRows.reduce((s, r) => s + r.clicks, 0);
-              const avgPosition = gscRows.length > 0
-                ? (gscRows.reduce((s, r) => s + r.position * r.impressions, 0) / totalImpressions).toFixed(1)
-                : '—';
+              const endDate = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+              const midDate = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+              const startDate = new Date(Date.now() - 59 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
-              // Per-page query for top articles
-              const pageRes = await searchconsole.searchanalytics.query({
-                siteUrl: GSC_SITE_URL,
-                requestBody: {
-                  startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-                  endDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
-                  dimensions: ['page'],
-                  rowLimit: 20,
-                },
-              });
-              const pageRows = (pageRes.data.rows || [])
+              // Query 1: TRUE totals (no dimensions → exact aggregate from GSC)
+              // Query 2: Top queries (dimensions + rowLimit for breakdown)
+              // Query 3: Top pages
+              // Query 4: Previous period aggregate for trend
+              const [currAgg, currTop, currPages, prevAgg] = await Promise.all([
+                sc.searchanalytics.query({ siteUrl: GSC_SITE_URL, requestBody: { startDate: midDate, endDate } }),
+                sc.searchanalytics.query({ siteUrl: GSC_SITE_URL, requestBody: { startDate: midDate, endDate, dimensions: ['query'], rowLimit: 30 } }),
+                sc.searchanalytics.query({ siteUrl: GSC_SITE_URL, requestBody: { startDate: midDate, endDate, dimensions: ['page'], rowLimit: 30 } }),
+                sc.searchanalytics.query({ siteUrl: GSC_SITE_URL, requestBody: { startDate, endDate: midDate } }),
+              ]);
+
+              const currAggRows = currAgg.data.rows || [];
+              const prevAggRows = prevAgg.data.rows || [];
+              const totalImpressions = currAggRows.length > 0 ? currAggRows[0].impressions : 0;
+              const totalClicks = currAggRows.length > 0 ? currAggRows[0].clicks : 0;
+              const avgPosition = currAggRows.length > 0 ? currAggRows[0].position.toFixed(1) : '—';
+              const prevImpr = prevAggRows.length > 0 ? prevAggRows[0].impressions : 0;
+              const prevClick = prevAggRows.length > 0 ? prevAggRows[0].clicks : 0;
+
+              const pageRows = (currPages.data.rows || [])
                 .filter(r => r.keys[0].includes('/articles/'))
                 .sort((a, b) => b.impressions - a.impressions);
 
@@ -3976,8 +3973,7 @@ exports.portalData = functions.https.onRequest(
                 ctr: Math.round(r.ctr * 10000) / 100,
               }));
 
-              // Top queries
-              const topQueries = gscRows
+              const topQueries = (currTop.data.rows || [])
                 .sort((a, b) => b.impressions - a.impressions)
                 .slice(0, 20)
                 .map(r => ({
@@ -3991,7 +3987,7 @@ exports.portalData = functions.https.onRequest(
               gscSummary = {
                 totalTracked: pageRows.length,
                 withRankData: pageRows.length,
-                indexed: pageRows.length,  // if it has impressions, it's indexed
+                indexed: pageRows.length,
                 top10: pageRows.filter(a => a.position <= 10).length,
                 top3: pageRows.filter(a => a.position <= 3).length,
                 totalImpressions,
@@ -4000,6 +3996,8 @@ exports.portalData = functions.https.onRequest(
                 avgPosition,
                 topArticles,
                 topQueries,
+                trendImprPct: prevImpr > 0 ? Math.round(((totalImpressions - prevImpr) / prevImpr) * 100) : 0,
+                trendClickPct: prevClick > 0 ? Math.round(((totalClicks - prevClick) / prevClick) * 100) : 0,
               };
             } catch (gscErr) {
               console.warn('⚠️ GSC live query failed, falling back to brain_experiments:', gscErr.message);
@@ -4047,7 +4045,6 @@ exports.portalData = functions.https.onRequest(
           }
 
           case 'analysis': {
-            // Fetch the same log + GSC data the logs tab uses, then ask DeepSeek to analyze
             const now2 = new Date();
             const sevenDaysAgo2 = new Date(now2.getTime() - 7 * 24 * 60 * 60 * 1000);
 
@@ -4062,67 +4059,82 @@ exports.portalData = functions.https.onRequest(
               try { return d.data().publishedAt?.toDate() > sevenDaysAgo2; } catch { return false; }
             });
             const recentArticles = articlesSnap2.docs.slice(0, 10).map(d => ({ title: d.data().title, publishedAt: d.data().publishedAt?.toDate?.()?.toISOString()?.slice(0, 10) }));
-
             const pendingTopics = allTopics2.filter(t => t.status === 'pending');
             const errorTopics = allTopics2.filter(t => t.status === 'error');
 
-            // GSC summary from logs section (reuse the same logic)
-            let gscData = { totalImpressions: 0, totalClicks: 0, avgPosition: '—' };
+            // GSC — query CURRENT 28 days + PREVIOUS 28 days for trend
+            let gscData = { totalImpressions: 0, totalClicks: 0, avgPosition: '—', prevImpressions: 0, prevClicks: 0, trendImprPct: 0, trendClickPct: 0, topQueries: [] };
             try {
               const { GoogleAuth: GA2 } = require('google-auth-library');
               const ga2 = new GA2({ scopes: ['https://www.googleapis.com/auth/webmasters.readonly'] });
               const gc2 = await ga2.getClient();
               const sc2 = google.searchconsole({ version: 'v1', auth: gc2 });
-              const gscRes2 = await sc2.searchanalytics.query({
-                siteUrl: GSC_SITE_URL,
-                requestBody: { startDate: new Date(now2.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), endDate: new Date(now2.getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10), rowLimit: 30 },
-              });
-              const rows2 = gscRes2.data.rows || [];
-              gscData.totalImpressions = rows2.reduce((s, r) => s + r.impressions, 0);
-              gscData.totalClicks = rows2.reduce((s, r) => s + r.clicks, 0);
-              gscData.avgPosition = rows2.length > 0 ? (rows2.reduce((s, r) => s + r.position * r.impressions, 0) / gscData.totalImpressions).toFixed(1) : '—';
-              gscData.topQueries = rows2.sort((a, b) => b.impressions - a.impressions).slice(0, 10).map(r => r.keys[0]);
+
+              const endDate = new Date(now2.getTime() - 3 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+              const midDate = new Date(now2.getTime() - 31 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+              const startDate = new Date(now2.getTime() - 59 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+
+              // Query 1: TRUE totals (no dimensions, no rowLimit — GSC returns exact aggregate)
+              // Query 2: Top queries (with dimensions + rowLimit for breakdown)
+              const [currAgg, prevAgg, currTop] = await Promise.all([
+                sc2.searchanalytics.query({ siteUrl: GSC_SITE_URL, requestBody: { startDate: midDate, endDate } }),
+                sc2.searchanalytics.query({ siteUrl: GSC_SITE_URL, requestBody: { startDate, endDate: midDate } }),
+                sc2.searchanalytics.query({ siteUrl: GSC_SITE_URL, requestBody: { startDate: midDate, endDate, dimensions: ['query'], rowLimit: 30 } }),
+              ]);
+
+              // TRUE totals from aggregate queries (no dimensions = accurate sums)
+              const currAggRows = currAgg.data.rows || [];
+              const prevAggRows = prevAgg.data.rows || [];
+              gscData.totalImpressions = currAggRows.length > 0 ? currAggRows[0].impressions : 0;
+              gscData.totalClicks = currAggRows.length > 0 ? currAggRows[0].clicks : 0;
+              gscData.avgPosition = gscData.totalImpressions > 0 ? (currAggRows[0].position).toFixed(1) : '—';
+              gscData.prevImpressions = prevAggRows.length > 0 ? prevAggRows[0].impressions : 0;
+              gscData.prevClicks = prevAggRows.length > 0 ? prevAggRows[0].clicks : 0;
+              gscData.trendImprPct = gscData.prevImpressions > 0 ? Math.round(((gscData.totalImpressions - gscData.prevImpressions) / gscData.prevImpressions) * 100) : 0;
+              gscData.trendClickPct = gscData.prevClicks > 0 ? Math.round(((gscData.totalClicks - gscData.prevClicks) / gscData.prevClicks) * 100) : 0;
+              // Top queries from dimension queries
+              gscData.topQueries = (currTop.data.rows || []).sort((a, b) => b.impressions - a.impressions).slice(0, 10).map(r => r.keys[0]);
             } catch (e2) { /* use zeros if GSC fails */ }
 
-            // Build the analysis prompt
             const summary = {
               articles: { total: activeArticles2.length, thisWeek: articlesThisWeek2.length, recent: recentArticles },
               topics: { total: allTopics2.length, pending: pendingTopics.length, error: errorTopics.length, published: allTopics2.filter(t => t.status === 'published').length },
-              gsc: { impressions: gscData.totalImpressions, clicks: gscData.totalClicks, avgPosition: gscData.avgPosition, topQueries: gscData.topQueries },
+              gsc: gscData,
             };
 
-            const prompt = `Bạn là CEO kiêm Product Manager của keolaigiamhom.vn — một vườn ươm keo lai giâm hom tại Việt Nam, vận hành content website như một kênh bán hàng và tạo khách hàng tiềm năng (leads). Bạn KHÔNG phải SEO specialist — bạn là người chịu trách nhiệm về TĂNG TRƯỞNG, DOANH THU, và CHIẾN LƯỢC SẢN PHẨM.
+            const trendNote = gscData.trendClickPct !== 0
+              ? `XU HƯỚNG 28 ngày: Clicks ${gscData.trendClickPct > 0 ? '+' : ''}${gscData.trendClickPct}%, Impressions ${gscData.trendImprPct > 0 ? '+' : ''}${gscData.trendImprPct}% so với 28 ngày trước đó. ${gscData.trendClickPct > 50 ? 'ĐANG TĂNG MẠNH — đây là tín hiệu quan trọng nhất.' : gscData.trendClickPct > 0 ? 'Đang tăng nhẹ.' : 'ĐANG GIẢM — cần chú ý.'}`
+              : 'Không có dữ liệu xu hướng (chưa đủ lịch sử GSC).';
 
-Suy nghĩ ở 3 cấp độ:
-- CEO: thị trường đang đi đâu? đối thủ đang làm gì? cơ hội lớn nhất 6-12 tháng tới là gì? làm sao để website này thành doanh nghiệp thật, không phải blog?
-- Product Manager: khách hàng cần gì? trải nghiệm của họ ra sao? sản phẩm nội dung nào thực sự chuyển đổi? nên build gì tiếp theo?
-- Growth: traffic đang tăng hay giảm? kênh nào hiệu quả nhất? làm sao để tăng trưởng kép (compounding growth)?
+            const prompt = `Bạn là CEO kiêm Product Manager của keolaigiamhom.vn — vườn ươm keo lai giâm hom tại Việt Nam.
 
-DỮ LIỆU THỰC TẾ:
-- Tổng bài viết: ${summary.articles.total}
-- Bài viết mới 7 ngày qua: ${summary.articles.thisWeek}
-- Tổng topic: ${summary.topics.total} (${summary.topics.pending} đang chờ, ${summary.topics.error} lỗi, ${summary.topics.published} đã đăng)
-- GSC 30 ngày: ${gscData.totalImpressions.toLocaleString('vi-VN')} impressions, ${gscData.totalClicks.toLocaleString('vi-VN')} clicks, vị trí trung bình ${gscData.avgPosition}
+QUAN TRỌNG: Tất cả số liệu dưới đây được query TRỰC TIẾP từ Google Search Console API và Firestore. Không có số nào bịa. Nếu số có vẻ không khớp với nhau, đó là do các query khác nhau (site-level vs per-page). Hãy ghi rõ bạn đang dùng số nào.
+
+DỮ LIỆU THỰC TẾ (từ Firestore + GSC API):
+- Tổng bài viết đã đăng: ${summary.articles.total}
+- Bài mới 7 ngày: ${summary.articles.thisWeek}
+- Topic queue: ${summary.topics.total} tổng (${summary.topics.pending} chờ, ${summary.topics.error} lỗi, ${summary.topics.published} đã publish)
+- GSC 28 ngày gần nhất: ${gscData.totalImpressions.toLocaleString('vi-VN')} impressions, ${gscData.totalClicks.toLocaleString('vi-VN')} clicks, vị trí TB ${gscData.avgPosition}
+- GSC 28 ngày trước đó: ${gscData.prevImpressions.toLocaleString('vi-VN')} impressions, ${gscData.prevClicks.toLocaleString('vi-VN')} clicks
+- ${trendNote}
 - Top queries: ${(gscData.topQueries || []).join(', ')}
+${summary.articles.recent.length > 0 ? '\nBài gần đây:\n' + summary.articles.recent.map(a => '- ' + a.title + ' (' + a.publishedAt + ')').join('\n') : ''}
+${pendingTopics.length <= 3 ? '\nCẢNH BÁO: Topic sắp hết — cần replenish.' : ''}
+${errorTopics.length > 0 ? '\nCẢNH BÁO: ' + errorTopics.length + ' topic lỗi — cần reset.' : ''}
 
-${summary.articles.recent.length > 0 ? 'Bài viết gần đây:\n' + summary.articles.recent.map(a => `- ${a.title} (${a.publishedAt})`).join('\n') : ''}
+Trả lời bằng tiếng Việt, giọng quyết đoán. Format:
 
-${pendingTopics.length <= 3 ? 'CẢNH BÁO: Topic sắp hết — cần replenish gấp.' : ''}
-${errorTopics.length > 0 ? 'CẢNH BÁO: Có ' + errorTopics.length + ' topic bị lỗi — cần reset hoặc sửa prompt.' : ''}
+## TÌNH HÌNH
+2 câu: con số chính + XU HƯỚNG. Nếu trend tăng mạnh thì phải nói rõ — đây là tín hiệu quan trọng nhất.
 
-Trả lời bằng tiếng Việt, giọng quyết đoán, không dài dòng. Format:
-
-## TẦM NHÌN & CHIẾN LƯỢC
-2-3 câu: bức tranh lớn. Website này đang ở đâu trong thị trường? Cơ hội lớn nhất 6-12 tháng tới là gì? Đối thủ đang làm gì mà mình chưa làm?
-
-## SỨC KHOẺ SẢN PHẨM
-Đánh giá ngắn gọn: content machine đang khoẻ hay yếu? Pipeline có bền vững không? Điểm nghẽn lớn nhất là gì?
-
-## CƠ HỘI TĂNG TRƯỞNG
-2-3 cơ hội cụ thể, có số liệu. Không phải "cải thiện SEO" — mà là "có thể chiếm vị trí #1 cho nhóm từ khoá X với lượng search Y/tháng". Hoặc "có thể tạo landing page bán giống trực tiếp từ traffic hiện có".
+## CƠ HỘI
+2-3 cơ hội cụ thể dựa trên SỐ LIỆU THẬT. Không bịa số.
 
 ## HÀNH ĐỘNG TUẦN NÀY
-3-5 việc CỤ THỂ, làm được trong 7 ngày, ưu tiên theo impact. Mỗi việc: làm gì → kỳ vọng kết quả gì. Không lý thuyết.`;
+3-5 việc cụ thể, ưu tiên theo impact, làm được trong 7 ngày. Mỗi việc: làm gì → kỳ vọng gì.
+
+## RỦI RO & ĐIỂM MÙ
+Những gì số liệu KHÔNG nói được. Những gì bạn không chắc chắn.`;
 
             const deepseekKey = deepseekApiKey.value();
             const dsRes = await fetch('https://api.deepseek.com/v1/chat/completions', {
