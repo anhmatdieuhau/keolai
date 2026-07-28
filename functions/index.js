@@ -25,6 +25,7 @@ const gmailAppPassword = defineSecret('GMAIL_APP_PASSWORD');
 const { normalizeSlug, isValidSlug } = require('./lib/slug');
 const { evaluateTopicNovelty, registerTopicFingerprint } = require('./lib/topic-dedup');
 const { nodes: WORKFLOW_NODES, edges: WORKFLOW_EDGES, GRAPH_VERSION } = require('./lib/workflowGraph');
+const { getDefaults: getPromptDefaults } = require('./lib/promptDefaults');
 const { embedTopicTitle } = require('./lib/embeddings');
 const { buildNurtureEmail, buildReengagementEmail } = require('./lib/nurtureTemplates');
 const costGuard = require('./marketing/lib/costGuard');
@@ -3901,6 +3902,7 @@ exports.portalData = functions.https.onRequest(
               pipelineCounts: {
                 pendingTopics: pendingTopicsSnap.size,
               },
+              prompts: getPromptDefaults(),
             });
           }
 

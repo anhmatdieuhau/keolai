@@ -57,7 +57,7 @@ export default function WorkflowTab({ data }) {
     </div>
   )
 
-  const { graph, budget, recentRuns, pipelineCounts } = data
+  const { graph, budget, recentRuns, pipelineCounts, prompts } = data
   const nodes = graph?.nodes || []
   const edges = graph?.edges || []
   const nodeMap = useMemo(() => buildNodeMap(nodes), [nodes])
@@ -178,6 +178,47 @@ export default function WorkflowTab({ data }) {
                     <div className="alert-title">Ghi chú</div>
                     <div className="alert-body" style={{ whiteSpace: 'pre-line' }}>{selectedNode.note}</div>
                   </div>
+                </div>
+              )}
+
+              {/* Prompts */}
+              {selectedNode.promptIds?.length > 0 && prompts && (
+                <div style={{ marginTop: 20 }}>
+                  <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--p-text)', marginBottom: 10, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <IconRobot size={14} /> Prompts ({selectedNode.promptIds.length})
+                  </div>
+                  {selectedNode.promptIds.map(pid => {
+                    const p = prompts[pid]
+                    if (!p) return null
+                    return (
+                      <div key={pid} className="card" style={{ marginBottom: 10, overflow: 'hidden' }}>
+                        <div style={{ padding: '8px 12px', background: 'var(--p-surface-2)', borderBottom: '1px solid var(--p-border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <span className="mono" style={{ fontSize: 10.5, color: 'var(--p-text-2)' }}>{pid}</span>
+                          <span className="wf-chip">{p.model || 'N/A'}</span>
+                        </div>
+                        <div style={{ padding: 12 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--p-text)', marginBottom: 8 }}>{p.label}</div>
+                          <pre style={{
+                            background: 'var(--p-surface-2)',
+                            border: '1px solid var(--p-border)',
+                            borderRadius: 'var(--p-radius-sm)',
+                            padding: 12,
+                            fontSize: 11,
+                            fontFamily: 'var(--p-mono)',
+                            lineHeight: 1.6,
+                            color: 'var(--p-text-2)',
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word',
+                            maxHeight: 400,
+                            overflowY: 'auto',
+                            margin: 0,
+                          }}>
+                            {p.template}
+                          </pre>
+                        </div>
+                      </div>
+                    )
+                  })}
                 </div>
               )}
 
