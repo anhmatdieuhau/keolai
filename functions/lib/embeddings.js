@@ -3,9 +3,11 @@
  * semantic tier of evaluateTopicNovelty (topic-dedup.js). One source of truth so index.js and
  * pipeline.js don't drift the way the slug-normalization logic did (B5).
  */
+const MODELS = require('./models');
+
 async function embedTopicTitle(title, apiKey) {
   const res = await fetch(
-    `https://aiplatform.googleapis.com/v1/publishers/google/models/text-embedding-004:predict?key=${apiKey}`,
+    `https://aiplatform.googleapis.com/v1/publishers/google/models/${MODELS.EMBED}:predict?key=${apiKey}`,
     {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },

@@ -17,6 +17,7 @@ const functions = require('firebase-functions/v2');
 const admin = require('firebase-admin');
 const { defineSecret } = require('firebase-functions/params');
 const nodemailer = require('nodemailer');
+const MODELS = require('./lib/models');
 
 // Admin is already initialized by index.js — just get db reference
 const db = admin.firestore();
@@ -304,7 +305,7 @@ Trả về JSON (không markdown, không giải thích) với format:
 
             const apiKey = vertexApiKey.value();
             const geminiRes = await fetch(
-                `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.0-flash-lite:generateContent?key=${apiKey}`,
+                `https://aiplatform.googleapis.com/v1/publishers/google/models/${MODELS.CHEAP}:generateContent?key=${apiKey}`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -644,7 +645,7 @@ Trả về nội dung BÀI VIẾT thuần túy (không tiêu đề ở đầu, k
 
             const apiKey = vertexApiKey.value();
             const geminiRes = await fetch(
-                `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
+                `https://aiplatform.googleapis.com/v1/publishers/google/models/${MODELS.CONTENT}:generateContent?key=${apiKey}`,
                 {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -913,7 +914,7 @@ Trả JSON: {"title":"...","target_keyword":"${topKw.term}","secondary_keywords"
 
                             const apiKey = vertexApiKey.value();
                             const geminiRes = await fetch(
-                                `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.0-flash-lite:generateContent?key=${apiKey}`,
+                                `https://aiplatform.googleapis.com/v1/publishers/google/models/${MODELS.CHEAP}:generateContent?key=${apiKey}`,
                                 {
                                     method: 'POST',
                                     headers: { 'Content-Type': 'application/json' },

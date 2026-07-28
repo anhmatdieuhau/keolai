@@ -22,6 +22,7 @@ const appClientSecret = defineSecret('APP_CLIENT_SECRET');
 const vertexApiKey = defineSecret('VERTEX_API_KEY');
 const gmailAppPassword = defineSecret('GMAIL_APP_PASSWORD');
 
+const MODELS = require('./lib/models');
 const { normalizeSlug, isValidSlug } = require('./lib/slug');
 const { evaluateTopicNovelty, registerTopicFingerprint } = require('./lib/topic-dedup');
 const { nodes: WORKFLOW_NODES, edges: WORKFLOW_EDGES, GRAPH_VERSION } = require('./lib/workflowGraph');
@@ -671,7 +672,7 @@ Yêu cầu:
 Trả về nội dung bài viết thuần túy (không có tiêu đề ở đầu).`;
 
       const geminiRes = await fetch(
-        `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
+        `https://aiplatform.googleapis.com/v1/publishers/google/models/${MODELS.CONTENT}:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -700,7 +701,7 @@ Trả về nội dung bài viết thuần túy (không có tiêu đề ở đầ
 
       if (geminiData.usageMetadata) {
         await costGuard
-          .recordUsage(db, 'gemini-3.6-flash', geminiData.usageMetadata.promptTokenCount || 0, geminiData.usageMetadata.candidatesTokenCount || 0)
+          .recordUsage(db, MODELS.CONTENT, geminiData.usageMetadata.promptTokenCount || 0, geminiData.usageMetadata.candidatesTokenCount || 0)
           .catch(() => {});
       }
 
@@ -1241,7 +1242,7 @@ Trả lời ngắn gọn, bullets, tiếng Việt.`;
           throw new Error('cost_guard_exceeded');
         }
         const geminiRes = await fetch(
-          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
+          `https://aiplatform.googleapis.com/v1/publishers/google/models/${MODELS.CHEAP}:generateContent?key=${apiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1256,7 +1257,7 @@ Trả lời ngắn gọn, bullets, tiếng Việt.`;
           aiSummary = data.candidates[0].content.parts[0].text;
           if (data.usageMetadata) {
             await costGuard
-              .recordUsage(db, 'gemini-3.1-flash-lite', data.usageMetadata.promptTokenCount || 0, data.usageMetadata.candidatesTokenCount || 0)
+              .recordUsage(db, MODELS.CHEAP, data.usageMetadata.promptTokenCount || 0, data.usageMetadata.candidatesTokenCount || 0)
               .catch(() => {});
           }
         }
@@ -1620,7 +1621,7 @@ Trả về bài viết thuần túy.`;
 
       try {
         const geminiRes = await fetch(
-          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
+          `https://aiplatform.googleapis.com/v1/publishers/google/models/${MODELS.CONTENT}:generateContent?key=${apiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -1922,7 +1923,7 @@ Trả về JSON array, KHÔNG có markdown block. Ví dụ:
 [{"title":"...","slug":"...","keywords":"...","description":"...","priority":8,"label":"Kỹ thuật"}]`;
 
       const geminiRes = await fetch(
-        `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.1-flash-lite:generateContent?key=${apiKey}`,
+        `https://aiplatform.googleapis.com/v1/publishers/google/models/${MODELS.CHEAP}:generateContent?key=${apiKey}`,
         {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1943,7 +1944,7 @@ Trả về JSON array, KHÔNG có markdown block. Ví dụ:
 
       if (data.usageMetadata) {
         await costGuard
-          .recordUsage(db, 'gemini-3.1-flash-lite', data.usageMetadata.promptTokenCount || 0, data.usageMetadata.candidatesTokenCount || 0)
+          .recordUsage(db, MODELS.CHEAP, data.usageMetadata.promptTokenCount || 0, data.usageMetadata.candidatesTokenCount || 0)
           .catch(() => {});
       }
 
@@ -2420,7 +2421,7 @@ Trả về nội dung bài đăng thuần túy.`;
 
       try {
         const geminiRes = await fetch(
-          `https://aiplatform.googleapis.com/v1/publishers/google/models/gemini-3.6-flash:generateContent?key=${apiKey}`,
+          `https://aiplatform.googleapis.com/v1/publishers/google/models/${MODELS.CONTENT}:generateContent?key=${apiKey}`,
           {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -3642,13 +3643,8 @@ exports.portalData = functions.https.onRequest(
             });
 
             const costData = costSnap.exists ? costSnap.data() : {};
-            // Compute total cost
-            const RATES = {
-              'gemini-3.6-flash': { in: 1.5, out: 7.0 },
-              'gemini-3.1-flash-lite': { in: 0.25, out: 1.5 },
-              'gemini-3.0-flash-lite': { in: 0.25, out: 1.5 },
-              'claude-sonnet-5': { in: 2.0, out: 10.0 },
-            };
+            // Compute total cost via costGuard (single source of truth)
+            const RATES = costGuard.MODEL_RATES_PER_1M_TOKENS_USD;
             let totalCostUsd = 0;
             for (const [model, u] of Object.entries(costData)) {
               if (model === 'updatedAt' || !u || typeof u !== 'object') continue;
@@ -3812,12 +3808,7 @@ exports.portalData = functions.https.onRequest(
             const monthsSnap = await db.collection('metrics').doc('costGuard')
               .collection('months').get();
 
-            const RATES = {
-              'gemini-3.6-flash': { in: 1.5, out: 7.0 },
-              'gemini-3.1-flash-lite': { in: 0.25, out: 1.5 },
-              'gemini-3.0-flash-lite': { in: 0.25, out: 1.5 },
-              'claude-sonnet-5': { in: 2.0, out: 10.0 },
-            };
+            const RATES = costGuard.MODEL_RATES_PER_1M_TOKENS_USD;
 
             const months = monthsSnap.docs
               .sort((a, b) => a.id.localeCompare(b.id))
@@ -3911,6 +3902,66 @@ exports.portalData = functions.https.onRequest(
         }
       } catch (err) {
         logger.error('❌ [portalData] Failed:', err);
+        return res.status(500).json({ error: err.message });
+      }
+    });
+  }
+);
+
+// ═══════════════════════════════════════
+// PORTAL TOPIC ACTIONS (reset stuck topics)
+// ═══════════════════════════════════════
+exports.topicAction = functions.https.onRequest(
+  {
+    region: 'us-central1',
+    timeoutSeconds: 60,
+    memory: '256MiB',
+    secrets: [appClientSecret],
+    cors: true,
+  },
+  async (req, res) => {
+    cors(req, res, async () => {
+      try {
+        if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+        const hasSecret = req.headers['x-app-secret'] === appClientSecret.value();
+        if (!hasSecret) return res.status(403).json({ error: 'Unauthorized' });
+
+        const { action, topicIds } = req.body || {};
+        if (action !== 'reset' || !Array.isArray(topicIds) || topicIds.length === 0) {
+          return res.status(400).json({ error: 'body must have action:"reset" and topicIds:["..."]' });
+        }
+
+        const batch = db.batch();
+        const skipped = [];
+        let updated = 0;
+
+        for (const id of topicIds) {
+          if (updated >= 400) { skipped.push({ id, reason: 'batch_limit' }); continue; }
+          const ref = db.collection('topics').doc(String(id));
+          const snap = await ref.get();
+          if (!snap.exists) { skipped.push({ id, reason: 'not_found' }); continue; }
+          const data = snap.data();
+          if (data.status === 'published') {
+            skipped.push({ id, reason: 'published — cannot reset published topic' });
+            continue;
+          }
+          if (data.status !== 'error' && data.status !== 'generating') {
+            skipped.push({ id, reason: 'status ' + data.status + ' — only error/generating allowed' });
+            continue;
+          }
+          batch.update(ref, {
+            status: 'pending',
+            errorMessage: admin.firestore.FieldValue.delete(),
+            scheduledAt: admin.firestore.FieldValue.delete(),
+          });
+          updated++;
+        }
+
+        if (updated > 0) await batch.commit();
+
+        return res.status(200).json({ updated, skipped });
+      } catch (err) {
+        logger.error('❌ [topicAction] Failed:', err);
         return res.status(500).json({ error: err.message });
       }
     });

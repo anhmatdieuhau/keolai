@@ -38,7 +38,7 @@ const DEFAULTS = {
   'pipeline.researcher.brief': {
     label: 'Pipeline · Researcher — sinh Content Brief',
     nodeId: 'pipe.researcher',
-    model: 'gemini-3.0-flash-lite',
+    model: 'gemini-3.1-flash-lite',
     template: `Bạn là Product Content Strategist cho ngành giống cây lâm nghiệp Việt Nam.
 Tạo Content Brief chi tiết cho keyword: "{{term}}"
 Cluster: {{cluster}} | Intent: {{intent}} | Revenue Score: {{revenueScore}}
@@ -82,7 +82,7 @@ Trả về nội dung bài viết thuần túy (không có tiêu đề ở đầ
   'pipeline.orchestrator.analyst': {
     label: 'Pipeline · Orchestrator — phân tích trend (inline)',
     nodeId: 'pipe.orchestrator',
-    model: 'gemini-3.0-flash-lite',
+    model: 'gemini-3.1-flash-lite',
     template: `Tạo Content Brief JSON cho keyword "{{term}}" (loại: {{intent}}, revenue score: {{revenueScore}}).
 Cluster: {{cluster}}
 
@@ -93,7 +93,7 @@ structure (3-5 heading + subPoints), internalLinks, seoMetadata.`,
   'pipeline.orchestrator.researcher': {
     label: 'Pipeline · Orchestrator — researcher inline',
     nodeId: 'pipe.orchestrator',
-    model: 'gemini-3.0-flash-lite',
+    model: 'gemini-3.1-flash-lite',
     template: `(Được gọi inline từ trong orchestrator với prompt KHÁC pipelineResearcher — pipeline.js:911)`,
   },
 

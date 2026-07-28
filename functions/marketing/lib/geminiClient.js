@@ -11,7 +11,8 @@
  * conflate the two when adding a new call site.
  */
 
-const DEFAULT_MODEL = 'gemini-3.6-flash';
+const MODELS = require('../../lib/models');
+const DEFAULT_MODEL = MODELS.CONTENT;
 
 /**
  * @param {string} apiKey

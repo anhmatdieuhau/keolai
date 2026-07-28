@@ -72,6 +72,27 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
     }
   }
 
+  async function handleTopicAction(action, topicIds) {
+    if (!appSecret) return alert('Cần APP_SECRET để thực hiện hành động này')
+    if (action === 'reset' && !confirm(`Reset ${topicIds.length} topic về trạng thái pending? Hành động này không thể hoàn tác.`)) return
+    setReplenishResult(null)
+    setReplenishing(true)
+    try {
+      const res = await fetch(`${FUNCTIONS_BASE}/topicAction`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-app-secret': appSecret },
+        body: JSON.stringify({ action, topicIds }),
+      })
+      const data = await res.json()
+      setReplenishResult({ ok: res.ok, data })
+      if (res.ok) onRefresh?.()
+    } catch (err) {
+      setReplenishResult({ ok: false, data: { error: err.message } })
+    } finally {
+      setReplenishing(false)
+    }
+  }
+
   return (
     <div>
       {/* Alert nếu gần hết topic */}
@@ -171,6 +192,16 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
                     <c.icon size={14} /> {c.title}
                   </div>
                   <div className="kanban-col-count">{cols.length}</div>
+                  {cols.length > 0 && (s === 'error' || s === 'generating') && (
+                    <button
+                      className="btn btn-ghost btn-sm"
+                      style={{ marginLeft: 'auto', fontSize: 10, padding: '2px 6px' }}
+                      onClick={() => handleTopicAction('reset', cols.map(t => t.id))}
+                      disabled={replenishing}
+                    >
+                      {s === 'error' ? 'Reset all' : 'Unstick'}
+                    </button>
+                  )}
                 </div>
                 {cols.slice(0, 15).map(topic => (
                   <div key={topic.id} className="kanban-card">
@@ -181,8 +212,11 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
                           <IconLink size={12} /> Xem bài viết
                         </a>
                       ) : topic.status === 'error' ? (
-                        <span style={{ color: '#9F2F2D', fontSize: 11 }}>
-                          <IconWarning size={12} /> {(topic.errorMessage || '').slice(0, 60)}
+                        <span style={{ color: '#9F2F2D', fontSize: 11 }} title={topic.errorMessage || ''}>
+                          <IconWarning size={12} /> {(() => {
+                            try { const p = JSON.parse(topic.errorMessage || '{}'); return (p.error && p.error.message) || p.message || '' }
+                            catch { return (topic.errorMessage || '').slice(0, 120) }
+                          })()}
                         </span>
                       ) : (
                         <span>P{topic.priority || 0} · {Array.isArray(topic.keywords) ? topic.keywords.slice(0, 2).join(', ') : topic.keywords || topic.label || ''}</span>
@@ -249,8 +283,11 @@ export default function TopicsTab({ data, appSecret, onRefresh }) {
                   </td>
                   <td>
                     {topic.status === 'error' ? (
-                      <span style={{ fontSize: 12, color: '#9F2F2D' }}>
-                        {(topic.errorMessage || 'Unknown error').slice(0, 80)}
+                      <span style={{ fontSize: 12, color: '#9F2F2D' }} title={topic.errorMessage || ''}>
+                        {(() => {
+                          try { const p = JSON.parse(topic.errorMessage || '{}'); return (p.error && p.error.message) || p.message || '' }
+                          catch { return (topic.errorMessage || '').slice(0, 120) }
+                        })()}
                       </span>
                     ) : topic.status === 'published' && topic.url ? (
                       <a href={topic.url} target="_blank" rel="noopener noreferrer" className="td-link" style={{ fontSize: 12 }}>
