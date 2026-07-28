@@ -3596,7 +3596,7 @@ exports.portalData = functions.https.onRequest(
     region: 'us-central1',
     timeoutSeconds: 30,
     memory: '256MiB',
-    secrets: [appClientSecret],
+    secrets: [appClientSecret, deepseekApiKey],
   },
   async (req, res) => {
     cors(req, res, async () => {
