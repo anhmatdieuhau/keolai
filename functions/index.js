@@ -4106,35 +4106,39 @@ exports.portalData = functions.https.onRequest(
               ? `XU HƯỚNG 28 ngày: Clicks ${gscData.trendClickPct > 0 ? '+' : ''}${gscData.trendClickPct}%, Impressions ${gscData.trendImprPct > 0 ? '+' : ''}${gscData.trendImprPct}% so với 28 ngày trước đó. ${gscData.trendClickPct > 50 ? 'ĐANG TĂNG MẠNH — đây là tín hiệu quan trọng nhất.' : gscData.trendClickPct > 0 ? 'Đang tăng nhẹ.' : 'ĐANG GIẢM — cần chú ý.'}`
               : 'Không có dữ liệu xu hướng (chưa đủ lịch sử GSC).';
 
-            const prompt = `Bạn là CEO kiêm Product Manager của keolaigiamhom.vn — vườn ươm keo lai giâm hom tại Việt Nam.
+            const prompt = `Bạn là BA/PO (Business Analyst + Product Owner) của keolaigiamhom.vn — vườn ươm keo lai giâm hom. Bạn đọc dữ liệu để tìm insight, và bạn chịu trách nhiệm quyết định nên LÀM GÌ TIẾP THEO để tạo ra doanh thu thật.
 
-QUAN TRỌNG: Tất cả số liệu dưới đây được query TRỰC TIẾP từ Google Search Console API và Firestore. Không có số nào bịa. Nếu số có vẻ không khớp với nhau, đó là do các query khác nhau (site-level vs per-page). Hãy ghi rõ bạn đang dùng số nào.
+3 nguyên tắc:
+1. TREND QUAN TRỌNG HƠN SỐ TUYỆT ĐỐI. Đừng nói "X clicks" — nói "tăng/giảm Y% so với kỳ trước". Một site tăng trưởng 140% với 50 clicks đáng giá hơn site đi ngang với 500 clicks.
+2. SỐ NÀO NÓI VIỆC ĐÓ. Ghi rõ bạn đang dùng số nào. Nếu hai số mâu thuẫn, nói ra — đó chính là insight.
+3. KHÔNG BỊA SỐ. Nếu không có dữ liệu, nói "không có dữ liệu". Nếu suy đoán, ghi rõ "(ước lượng)".
 
-DỮ LIỆU THỰC TẾ (từ Firestore + GSC API):
-- Tổng bài viết đã đăng: ${summary.articles.total}
-- Bài mới 7 ngày: ${summary.articles.thisWeek}
-- Topic queue: ${summary.topics.total} tổng (${summary.topics.pending} chờ, ${summary.topics.error} lỗi, ${summary.topics.published} đã publish)
-- GSC 28 ngày gần nhất: ${gscData.totalImpressions.toLocaleString('vi-VN')} impressions, ${gscData.totalClicks.toLocaleString('vi-VN')} clicks, vị trí TB ${gscData.avgPosition}
-- GSC 28 ngày trước đó: ${gscData.prevImpressions.toLocaleString('vi-VN')} impressions, ${gscData.prevClicks.toLocaleString('vi-VN')} clicks
-- ${trendNote}
-- Top queries: ${(gscData.topQueries || []).join(', ')}
+DỮ LIỆU THỰC TẾ (Firestore + GSC API — đối chiếu chéo được):
+- Content: ${summary.articles.total} bài, ${summary.articles.thisWeek} bài mới 7 ngày qua
+- Pipeline: ${summary.topics.total} topic (${summary.topics.pending} chờ, ${summary.topics.error} lỗi, ${summary.topics.published} đã publish)
+${pendingTopics.length <= 3 ? '- CẢNH BÁO: Topic sắp hết.' : ''}
+${errorTopics.length > 0 ? '- CẢNH BÁO: ' + errorTopics.length + ' topic lỗi.' : ''}
+- GSC 28 ngày: ${gscData.totalImpressions.toLocaleString('vi-VN')} imp, ${gscData.totalClicks.toLocaleString('vi-VN')} clicks, CTR ${gscData.totalImpressions > 0 ? ((gscData.totalClicks / gscData.totalImpressions) * 100).toFixed(1) : '0'}%, pos ${gscData.avgPosition}
+- GSC 28 ngày trước: ${gscData.prevImpressions.toLocaleString('vi-VN')} imp, ${gscData.prevClicks.toLocaleString('vi-VN')} clicks
+- TREND: clicks ${gscData.trendClickPct > 0 ? '+' : ''}${gscData.trendClickPct}%, imp ${gscData.trendImprPct > 0 ? '+' : ''}${gscData.trendImprPct}%
+- Top queries: ${(gscData.topQueries || []).slice(0, 8).join(', ')}
 ${summary.articles.recent.length > 0 ? '\nBài gần đây:\n' + summary.articles.recent.map(a => '- ' + a.title + ' (' + a.publishedAt + ')').join('\n') : ''}
-${pendingTopics.length <= 3 ? '\nCẢNH BÁO: Topic sắp hết — cần replenish.' : ''}
-${errorTopics.length > 0 ? '\nCẢNH BÁO: ' + errorTopics.length + ' topic lỗi — cần reset.' : ''}
 
-Trả lời bằng tiếng Việt, giọng quyết đoán. Format:
+Trả lời tiếng Việt, giọng phân tích sắc nhưng không làm màu. Format:
 
-## TÌNH HÌNH
-2 câu: con số chính + XU HƯỚNG. Nếu trend tăng mạnh thì phải nói rõ — đây là tín hiệu quan trọng nhất.
+## XU HƯỚNG CHÍNH
+1 câu về TREND — đây là insight quan trọng nhất. Site đang đi lên hay đi xuống? Tốc độ ra sao? So sánh được với kỳ trước không?
 
-## CƠ HỘI
-2-3 cơ hội cụ thể dựa trên SỐ LIỆU THẬT. Không bịa số.
+## CƠ HỘI KINH DOANH
+2-3 cơ hội GẮN VỚI SỐ LIỆU. Không phải "cần SEO tốt hơn" — mà là "nhóm từ khoá X có Y impressions, nếu tối ưu CTA có thể chuyển đổi thành Z leads". Nếu thấy query có ý định mua (giá, bảng giá, mua, đặt)... phải chỉ ra — đây là traffic có thể thành doanh thu NGAY.
 
-## HÀNH ĐỘNG TUẦN NÀY
-3-5 việc cụ thể, ưu tiên theo impact, làm được trong 7 ngày. Mỗi việc: làm gì → kỳ vọng gì.
+## VIỆC CẦN LÀM TUẦN NÀY
+3-5 hành động, ưu tiên theo ROI (làm ít — ra kết quả nhiều). Mỗi dòng: việc cụ thể → kỳ vọng định lượng được.
 
-## RỦI RO & ĐIỂM MÙ
-Những gì số liệu KHÔNG nói được. Những gì bạn không chắc chắn.`;
+## ĐIỂM MÙ & CÂU HỎI MỞ
+- Số liệu này KHÔNG cho biết điều gì?
+- Có gì đáng ngờ / cần kiểm tra thêm không?
+- Nếu có 1 câu hỏi nên hỏi khách hàng — đó là gì?`;
 
             const deepseekKey = deepseekApiKey.value();
             const dsRes = await fetch('https://api.deepseek.com/v1/chat/completions', {
