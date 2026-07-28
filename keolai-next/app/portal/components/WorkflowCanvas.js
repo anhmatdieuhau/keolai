@@ -113,8 +113,9 @@ export default function WorkflowCanvas({
   onZoomChange,
 }) {
   const canvasRef = useRef(null)
-  const dragRef = useRef(null)   // { nodeId, startX, startY, posX, posY }
+  const dragRef = useRef(null)   // { nodeId, startX, startY, posX, posY, captured }
   const [dragOffset, setDragOffset] = useState({})
+  const DRAG_THRESHOLD = 4       // px before drag starts (click = <4px move)
 
   // ── Starvation ──
   const starvedSet = computeStarved(disabledSet, nodes, edges)
@@ -130,35 +131,46 @@ export default function WorkflowCanvas({
   const nodeMapWithPos = { ...nodeMap }
   for (const n of nodes) nodeMapWithPos[n.id] = { ...n, _pos: resolved[n.id] }
 
-  // ── Pointer drag handlers ──
+  // ── Pointer drag handlers (threshold: <4px = click, >=4px = drag) ──
   const handlePointerDown = useCallback((e, nodeId) => {
     e.stopPropagation()
-    const el = e.currentTarget
-    el.setPointerCapture(e.pointerId)
-    dragRef.current = { nodeId, startX: e.clientX, startY: e.clientY, posX: resolved[nodeId]?.x || 0, posY: resolved[nodeId]?.y || 0 }
+    dragRef.current = {
+      nodeId, startX: e.clientX, startY: e.clientY,
+      posX: resolved[nodeId]?.x || 0, posY: resolved[nodeId]?.y || 0,
+      captured: false,
+    }
   }, [resolved])
 
   const handlePointerMove = useCallback((e) => {
-    if (!dragRef.current) return
     const d = dragRef.current
+    if (!d) return
     const dx = e.clientX - d.startX
     const dy = e.clientY - d.startY
+    // Only start drag after threshold
+    if (!d.captured && Math.abs(dx) + Math.abs(dy) < DRAG_THRESHOLD) return
+    if (!d.captured) {
+      d.captured = true
+      const el = document.querySelector('[data-node-id="' + d.nodeId + '"]')
+      if (el) el.setPointerCapture(e.pointerId)
+    }
     setDragOffset(prev => ({ ...prev, [d.nodeId]: { x: dx, y: dy } }))
   }, [])
 
   const handlePointerUp = useCallback((e) => {
-    if (!dragRef.current) return
     const d = dragRef.current
-    const el = document.querySelector(`[data-node-id="${d.nodeId}"]`)
-    if (el) el.releasePointerCapture(e.pointerId)
-    // Apply permanently
-    setDragOffset(prev => {
-      const off = prev[d.nodeId] || { x: 0, y: 0 }
-      const next = { ...prev }
-      delete next[d.nodeId]
-      return next
-    })
-    // TODO Stage 2: save via POST workflowControl
+    if (!d) return
+    if (d.captured) {
+      const el = document.querySelector('[data-node-id="' + d.nodeId + '"]')
+      if (el) el.releasePointerCapture(e.pointerId)
+      // Commit offset permanently
+      setDragOffset(prev => {
+        const off = prev[d.nodeId] || { x: 0, y: 0 }
+        const next = { ...prev }
+        delete next[d.nodeId]
+        return next
+      })
+    }
+    // If never captured (<4px), onClick on the inner node fires normally
     dragRef.current = null
   }, [])
 

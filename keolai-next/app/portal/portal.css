@@ -468,10 +468,10 @@
 .wf-badge--starved { background: var(--p-danger-bg); color: var(--p-danger); }
 .wf-badge--off { background: #181715; color: #FFFFFF; }
 
-/* Drawer — fixed right panel */
+/* Drawer — fixed right panel, slides in on click */
 .wf-drawer-overlay {
-  position: fixed; inset: 0; background: rgba(0,0,0,0.08);
-  z-index: 90; display: none;
+  position: fixed; inset: 0; background: rgba(0,0,0,0.12);
+  z-index: 90;
 }
 .wf-drawer {
   position: fixed; top: 0; right: 0; bottom: 0; width: 420px; max-width: 92vw;
@@ -479,14 +479,11 @@
   border-left: 1px solid var(--p-border);
   z-index: 95;
   transform: translateX(100%);
-  transition: transform 0.2s ease;
+  transition: transform 0.25s ease;
   display: flex; flex-direction: column;
+  box-shadow: -4px 0 24px rgba(0,0,0,0.08);
 }
 .wf-drawer.is-open { transform: translateX(0); }
-.wf-drawer.is-open + .wf-drawer-overlay,
-.wf-drawer.is-open ~ .wf-drawer-overlay { display: none; }
-.wf-drawer-overlay:has(+ .wf-drawer.is-open),
-body:has(.wf-drawer.is-open) .wf-drawer-overlay { display: block; }
 .wf-drawer-header {
   padding: 16px 20px;
   border-bottom: 1px solid var(--p-border);
