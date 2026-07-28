@@ -3923,8 +3923,47 @@ exports.portalData = functions.https.onRequest(
             const allTopics = topicsSnap.docs.map(d => d.data());
             const activeArticles = articlesSnap.docs.filter(d => !d.data().retired && !d.data().redirectTo);
 
+            // GSC performance — from brain_experiments C2 rank data
+            const experimentsSnap = await db.collection('brain_experiments').get();
+            const gscArticles = experimentsSnap.docs
+              .map(d => {
+                const data = d.data();
+                const c2 = data.c2 || {};
+                return {
+                  slug: d.id,
+                  articleUrl: data.articleUrl,
+                  position: c2.position,
+                  impressions: c2.impressions,
+                  clicks: c2.clicks,
+                  ctr: c2.ctr,
+                  hasData: c2.hasData || (c2.impressions > 0),
+                  indexed: data.c1?.indexed,
+                  status: data.status,
+                };
+              })
+              .filter(a => a.hasData)
+              .sort((a, b) => (b.impressions || 0) - (a.impressions || 0));
+
+            const gscSummary = {
+              totalTracked: experimentsSnap.size,
+              withRankData: gscArticles.length,
+              indexed: experimentsSnap.docs.filter(d => d.data().c1?.indexed).length,
+              top10: gscArticles.filter(a => a.position && a.position <= 10).length,
+              top3: gscArticles.filter(a => a.position && a.position <= 3).length,
+              totalImpressions: gscArticles.reduce((s, a) => s + (a.impressions || 0), 0),
+              totalClicks: gscArticles.reduce((s, a) => s + (a.clicks || 0), 0),
+              avgCtr: gscArticles.length > 0
+                ? (gscArticles.reduce((s, a) => s + (a.ctr || 0), 0) / gscArticles.length).toFixed(2)
+                : '0',
+              avgPosition: gscArticles.length > 0
+                ? (gscArticles.reduce((s, a) => s + (a.position || 0), 0) / gscArticles.length).toFixed(1)
+                : '—',
+              topArticles: gscArticles.slice(0, 15),
+            };
+
             return res.status(200).json({
               timeline: timeline.slice(0, 100),
+              gsc: gscSummary,
               counts: {
                 topics: {
                   total: allTopics.length,

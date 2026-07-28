@@ -45,7 +45,7 @@ export default function LogsTab({ data }) {
     </div>
   )
 
-  const { timeline = [], counts } = data
+  const { timeline = [], counts, gsc } = data
 
   // Filter
   const filtered = useMemo(() => {
@@ -98,6 +98,92 @@ export default function LogsTab({ data }) {
           <option value="error">Lỗi ({timeline.filter(e => e.status === 'error' || (e.type === 'topic' && e.errorMessage)).length})</option>
         </select>
       </div>
+
+      {/* GSC Performance */}
+      {gsc && (
+        <div className="card" style={{ marginBottom: 20 }}>
+          <div className="card-header">
+            <span className="card-title"><IconTrend size={16} /> Hiệu quả SEO — Google Search Console</span>
+            <span className="card-subtitle">{gsc.totalTracked} bài tracked</span>
+          </div>
+          <div className="card-body">
+            {/* GSC KPI row */}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: 12, marginBottom: 16 }}>
+              <div style={{ textAlign: 'center', padding: 12, background: 'var(--p-surface-2)', borderRadius: 6 }}>
+                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--p-mono)', color: 'var(--p-text)' }}>{gsc.withRankData}</div>
+                <div style={{ fontSize: 10, color: 'var(--p-text-muted)', marginTop: 2 }}>Có rank data</div>
+              </div>
+              <div style={{ textAlign: 'center', padding: 12, background: 'var(--p-success-bg)', borderRadius: 6 }}>
+                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--p-mono)', color: 'var(--p-success)' }}>{gsc.indexed}</div>
+                <div style={{ fontSize: 10, color: 'var(--p-success)', marginTop: 2 }}>Đã index</div>
+              </div>
+              <div style={{ textAlign: 'center', padding: 12, background: 'var(--p-info-bg)', borderRadius: 6 }}>
+                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--p-mono)', color: 'var(--p-info)' }}>{gsc.top10}</div>
+                <div style={{ fontSize: 10, color: 'var(--p-info)', marginTop: 2 }}>Top 10 Google</div>
+              </div>
+              <div style={{ textAlign: 'center', padding: 12, background: 'var(--p-warning-bg)', borderRadius: 6 }}>
+                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--p-mono)', color: 'var(--p-warning)' }}>{gsc.totalImpressions.toLocaleString('vi-VN')}</div>
+                <div style={{ fontSize: 10, color: 'var(--p-warning)', marginTop: 2 }}>Tổng impressions</div>
+              </div>
+              <div style={{ textAlign: 'center', padding: 12, background: 'var(--p-surface-2)', borderRadius: 6 }}>
+                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--p-mono)', color: 'var(--p-text)' }}>{gsc.totalClicks.toLocaleString('vi-VN')}</div>
+                <div style={{ fontSize: 10, color: 'var(--p-text-muted)', marginTop: 2 }}>Tổng clicks</div>
+              </div>
+              <div style={{ textAlign: 'center', padding: 12, background: 'var(--p-surface-2)', borderRadius: 6 }}>
+                <div style={{ fontSize: 22, fontWeight: 700, fontFamily: 'var(--p-mono)', color: 'var(--p-text)' }}>{gsc.avgPosition}</div>
+                <div style={{ fontSize: 10, color: 'var(--p-text-muted)', marginTop: 2 }}>Avg position</div>
+              </div>
+            </div>
+
+            {/* AI Summary */}
+            <div style={{
+              background: 'var(--p-surface-2)', borderRadius: 6, padding: 14,
+              fontSize: 13, lineHeight: 1.7, color: 'var(--p-text-2)',
+            }}>
+              <div style={{ fontSize: 11, fontWeight: 700, color: 'var(--p-text-muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 6 }}>
+                Tóm tắt tình hình
+              </div>
+              Đang theo dõi <strong>{gsc.totalTracked} bài</strong> trên Google Search Console.
+              Có <strong style={{ color: 'var(--p-success)' }}>{gsc.withRankData} bài</strong> đã có dữ liệu rank (C2 checkpoint), trong đó
+              {' '}<strong style={{ color: 'var(--p-info)' }}>{gsc.top10} bài lọt top 10</strong>,{' '}
+              <strong style={{ color: 'var(--p-info)' }}>{gsc.top3} bài lọt top 3</strong>.
+              Tổng cộng <strong>{gsc.totalImpressions.toLocaleString('vi-VN')} impressions</strong> và{' '}
+              <strong>{gsc.totalClicks.toLocaleString('vi-VN')} clicks</strong> (CTR trung bình {gsc.avgCtr}%).
+              Vị trí trung bình: <strong>{gsc.avgPosition}</strong>.
+              {gsc.top3 === 0 ? ' Chưa có bài nào lọt top 3 — cần thêm thời gian để index và leo rank.' : ''}
+              {gsc.indexed < gsc.totalTracked ? ` Còn ${gsc.totalTracked - gsc.indexed} bài chưa được index.` : ''}
+            </div>
+
+            {/* Top articles table */}
+            {gsc.topArticles.length > 0 && (
+              <div className="table-wrap" style={{ marginTop: 14 }}>
+                <table className="portal-table">
+                  <thead>
+                    <tr>
+                      <th>Bài viết</th>
+                      <th>Position</th>
+                      <th>Impressions</th>
+                      <th>Clicks</th>
+                      <th>CTR</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {gsc.topArticles.map(a => (
+                      <tr key={a.slug}>
+                        <td style={{ maxWidth: 280 }}><a href={a.articleUrl || '#'} target="_blank" rel="noopener noreferrer" className="td-link truncate" style={{ display: 'block' }}>{a.slug}</a></td>
+                        <td className="mono">{a.position != null ? `#${a.position}` : '—'}</td>
+                        <td className="mono">{a.impressions?.toLocaleString('vi-VN') || '—'}</td>
+                        <td className="mono">{a.clicks?.toLocaleString('vi-VN') || '—'}</td>
+                        <td className="mono">{a.ctr != null ? `${a.ctr}%` : '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Timeline */}
       {grouped.length === 0 ? (
