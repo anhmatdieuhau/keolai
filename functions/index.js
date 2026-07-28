@@ -3844,6 +3844,108 @@ exports.portalData = functions.https.onRequest(
             });
           }
 
+          case 'logs': {
+            // Timeline — merge recent events from topics, articles, weekly_reports
+            const now = new Date();
+            const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+            const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+            const [topicsSnap, articlesSnap, weeklySnap] = await Promise.all([
+              db.collection('topics').orderBy('priority', 'desc').get(),
+              db.collection('articles').orderBy('publishedAt', 'desc').limit(100).get(),
+              db.collection('weekly_reports').orderBy('sentAt', 'desc').limit(10).get(),
+            ]);
+
+            // Topic events
+            const topicEvents = topicsSnap.docs
+              .filter(d => {
+                const t = safeDate(d.data().publishedAt) || safeDate(d.data().scheduledAt);
+                return t && new Date(t) > thirtyDaysAgo;
+              })
+              .map(d => {
+                const data = d.data();
+                return {
+                  type: 'topic',
+                  id: d.id,
+                  title: data.title,
+                  status: data.status,
+                  timestamp: data.publishedAt ? safeDate(data.publishedAt) : safeDate(data.scheduledAt),
+                  errorMessage: data.errorMessage,
+                  url: data.url,
+                  priority: data.priority,
+                };
+              });
+
+            // Article events
+            const articleEvents = articlesSnap.docs
+              .filter(d => {
+                const t = safeDate(d.data().publishedAt);
+                return t && new Date(t) > thirtyDaysAgo;
+              })
+              .map(d => {
+                const data = d.data();
+                return {
+                  type: 'article',
+                  id: d.id,
+                  title: data.title,
+                  timestamp: safeDate(data.publishedAt),
+                  url: data.url,
+                  source: data.source,
+                };
+              });
+
+            // Weekly report events
+            const reportEvents = weeklySnap.docs
+              .filter(d => {
+                const t = safeDate(d.data().sentAt);
+                return t && new Date(t) > thirtyDaysAgo;
+              })
+              .map(d => {
+                const data = d.data();
+                return {
+                  type: 'report',
+                  id: d.id,
+                  period: data.period,
+                  timestamp: safeDate(data.sentAt),
+                  newArticles: data.newArticles,
+                  totalArticles: data.totalArticles,
+                  pendingTopics: data.pendingTopics,
+                  aiSummary: data.aiSummary,
+                  newLeads: data.newLeads,
+                };
+              });
+
+            // Merge + sort by timestamp desc
+            const timeline = [...topicEvents, ...articleEvents, ...reportEvents]
+              .sort((a, b) => (b.timestamp || '').localeCompare(a.timestamp || ''));
+
+            // Counts
+            const allTopics = topicsSnap.docs.map(d => d.data());
+            const activeArticles = articlesSnap.docs.filter(d => !d.data().retired && !d.data().redirectTo);
+
+            return res.status(200).json({
+              timeline: timeline.slice(0, 100),
+              counts: {
+                topics: {
+                  total: allTopics.length,
+                  pending: allTopics.filter(t => t.status === 'pending').length,
+                  generating: allTopics.filter(t => t.status === 'generating').length,
+                  published: allTopics.filter(t => t.status === 'published').length,
+                  error: allTopics.filter(t => t.status === 'error').length,
+                },
+                articles: {
+                  total: activeArticles.length,
+                  thisWeek: activeArticles.filter(d => {
+                    try { return d.data().publishedAt?.toDate() > sevenDaysAgo; } catch { return false; }
+                  }).length,
+                  thisMonth: activeArticles.filter(d => {
+                    try { return d.data().publishedAt?.toDate() > thirtyDaysAgo; } catch { return false; }
+                  }).length,
+                },
+              },
+            });
+          }
+
           case 'workflow': {
             // Budget via costGuard (import, don't copy the rate table a third time)
             const budget = await costGuard.checkBudget(db);

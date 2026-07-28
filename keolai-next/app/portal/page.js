@@ -16,6 +16,7 @@ import SeoTab from './components/SeoTab'
 import TopicsTab from './components/TopicsTab'
 import CostsTab from './components/CostsTab'
 import WorkflowTab from './components/WorkflowTab'
+import LogsTab from './components/LogsTab'
 
 // ─── Firebase init ────────────────────────────────────────
 // The Web API key is not a secret (Firebase scopes access via Authorized
@@ -56,6 +57,7 @@ const TABS = [
   { id: 'topics',    label: 'Topics',    icon: IconTopics, section: 'topics' },
   { id: 'costs',     label: 'Chi Phí',   icon: IconCosts, section: 'costs' },
   { id: 'workflow',  label: 'Workflow',  icon: IconWorkflow, section: 'workflow' },
+  { id: 'logs',      label: 'Logs',      icon: IconClock, section: 'logs' },
 ]
 
 // ─── API helper ───────────────────────────────────────────
@@ -386,6 +388,9 @@ function PortalApp({ user }) {
                 )}
                 {activeTab === 'workflow' && (
                   <WorkflowTab data={tabData.workflow} />
+                )}
+                {activeTab === 'logs' && (
+                  <LogsTab data={tabData.logs} />
                 )}
               </>
             )}
