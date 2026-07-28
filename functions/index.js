@@ -4113,7 +4113,7 @@ Yêu cầu trả lời bằng tiếng Việt, format rõ ràng:
             const deepseekKey = deepseekApiKey.value();
             const dsRes = await fetch('https://api.deepseek.com/v1/chat/completions', {
               method: 'POST',
-              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${deepseekKey}` },
+              headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + deepseekKey },
               body: JSON.stringify({
                 model: 'deepseek-chat',
                 messages: [{ role: 'user', content: prompt }],
