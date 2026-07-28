@@ -8,13 +8,14 @@ import {
 } from 'firebase/auth'
 import './portal.css'
 
-import { IconOverview, IconArticles, IconSeo, IconTopics, IconCosts, IconRefresh, IconLogout, IconKey, IconClock, IconFire, IconTrend, IconGoogle } from './components/Icons'
+import { IconOverview, IconArticles, IconSeo, IconTopics, IconCosts, IconWorkflow, IconRefresh, IconLogout, IconKey, IconClock, IconFire, IconTrend, IconGoogle } from './components/Icons'
 
 import DashboardTab from './components/DashboardTab'
 import ArticlesTab from './components/ArticlesTab'
 import SeoTab from './components/SeoTab'
 import TopicsTab from './components/TopicsTab'
 import CostsTab from './components/CostsTab'
+import WorkflowTab from './components/WorkflowTab'
 
 // ─── Firebase init ────────────────────────────────────────
 // The Web API key is not a secret (Firebase scopes access via Authorized
@@ -54,6 +55,7 @@ const TABS = [
   { id: 'seo',       label: 'SEO & GSC', icon: IconSeo, section: 'seo' },
   { id: 'topics',    label: 'Topics',    icon: IconTopics, section: 'topics' },
   { id: 'costs',     label: 'Chi Phí',   icon: IconCosts, section: 'costs' },
+  { id: 'workflow',  label: 'Workflow',  icon: IconWorkflow, section: 'workflow' },
 ]
 
 // ─── API helper ───────────────────────────────────────────
@@ -381,6 +383,9 @@ function PortalApp({ user }) {
                 )}
                 {activeTab === 'costs' && (
                   <CostsTab data={tabData.costs} />
+                )}
+                {activeTab === 'workflow' && (
+                  <WorkflowTab data={tabData.workflow} />
                 )}
               </>
             )}

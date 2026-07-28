@@ -311,6 +311,43 @@ export const IconArrowsSort = (p) => (
   </Svg>
 )
 
+/* ── Workflow ─────────────────────────────────────────── */
+export const IconWorkflow = (p) => (
+  <Svg {...p}>
+    <rect x="3" y="5" width="6" height="5" rx="1" />
+    <rect x="15" y="5" width="6" height="5" rx="1" />
+    <rect x="9" y="14" width="6" height="5" rx="1" />
+    <path d="M6 7.5h15M6 16.5h3" />
+  </Svg>
+)
+
+export const IconPlay = (p) => (
+  <Svg {...p}>
+    <path d="M6 4.5 19.5 12 6 19.5Z" />
+  </Svg>
+)
+
+export const IconPower = (p) => (
+  <Svg {...p}>
+    <path d="M12 3v7M18.4 5.6a8 8 0 1 1-12.8 0" />
+  </Svg>
+)
+
+export const IconDatabase = (p) => (
+  <Svg {...p}>
+    <ellipse cx="12" cy="5.5" rx="8.5" ry="3" />
+    <path d="M3.5 5.5v13c0 1.66 3.81 3 8.5 3s8.5-1.34 8.5-3v-13" />
+    <path d="M3.5 12c0 1.66 3.81 3 8.5 3s8.5-1.34 8.5-3" />
+  </Svg>
+)
+
+export const IconUser = (p) => (
+  <Svg {...p}>
+    <circle cx="12" cy="8" r="4" />
+    <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+  </Svg>
+)
+
 /* ── Primitive ────────────────────────────────────────── */
 export const StatusDot = ({ color, size = 8 }) => (
   <span
