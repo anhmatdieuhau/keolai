@@ -21,6 +21,7 @@ const notionApiToken = defineSecret('NOTION_API_TOKEN');
 const appClientSecret = defineSecret('APP_CLIENT_SECRET');
 const vertexApiKey = defineSecret('VERTEX_API_KEY');
 const gmailAppPassword = defineSecret('GMAIL_APP_PASSWORD');
+const deepseekApiKey = defineSecret('DEEPSEEK_API_KEY');
 
 const MODELS = require('./lib/models');
 const { normalizeSlug, isValidSlug } = require('./lib/slug');
@@ -4043,6 +4044,93 @@ exports.portalData = functions.https.onRequest(
                 },
               },
             });
+          }
+
+          case 'analysis': {
+            // Fetch the same log + GSC data the logs tab uses, then ask DeepSeek to analyze
+            const now2 = new Date();
+            const sevenDaysAgo2 = new Date(now2.getTime() - 7 * 24 * 60 * 60 * 1000);
+
+            const [topicsSnap2, articlesSnap2] = await Promise.all([
+              db.collection('topics').get(),
+              db.collection('articles').orderBy('publishedAt', 'desc').limit(50).get(),
+            ]);
+
+            const allTopics2 = topicsSnap2.docs.map(d => d.data());
+            const activeArticles2 = articlesSnap2.docs.filter(d => !d.data().retired && !d.data().redirectTo);
+            const articlesThisWeek2 = activeArticles2.filter(d => {
+              try { return d.data().publishedAt?.toDate() > sevenDaysAgo2; } catch { return false; }
+            });
+            const recentArticles = articlesSnap2.docs.slice(0, 10).map(d => ({ title: d.data().title, publishedAt: d.data().publishedAt?.toDate?.()?.toISOString()?.slice(0, 10) }));
+
+            const pendingTopics = allTopics2.filter(t => t.status === 'pending');
+            const errorTopics = allTopics2.filter(t => t.status === 'error');
+
+            // GSC summary from logs section (reuse the same logic)
+            let gscData = { totalImpressions: 0, totalClicks: 0, avgPosition: '—' };
+            try {
+              const { GoogleAuth: GA2 } = require('google-auth-library');
+              const ga2 = new GA2({ scopes: ['https://www.googleapis.com/auth/webmasters.readonly'] });
+              const gc2 = await ga2.getClient();
+              const sc2 = google.searchconsole({ version: 'v1', auth: gc2 });
+              const gscRes2 = await sc2.searchanalytics.query({
+                siteUrl: GSC_SITE_URL,
+                requestBody: { startDate: new Date(now2.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10), endDate: new Date(now2.getTime() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10), rowLimit: 30 },
+              });
+              const rows2 = gscRes2.data.rows || [];
+              gscData.totalImpressions = rows2.reduce((s, r) => s + r.impressions, 0);
+              gscData.totalClicks = rows2.reduce((s, r) => s + r.clicks, 0);
+              gscData.avgPosition = rows2.length > 0 ? (rows2.reduce((s, r) => s + r.position * r.impressions, 0) / gscData.totalImpressions).toFixed(1) : '—';
+              gscData.topQueries = rows2.sort((a, b) => b.impressions - a.impressions).slice(0, 10).map(r => r.keys[0]);
+            } catch (e2) { /* use zeros if GSC fails */ }
+
+            // Build the analysis prompt
+            const summary = {
+              articles: { total: activeArticles2.length, thisWeek: articlesThisWeek2.length, recent: recentArticles },
+              topics: { total: allTopics2.length, pending: pendingTopics.length, error: errorTopics.length, published: allTopics2.filter(t => t.status === 'published').length },
+              gsc: { impressions: gscData.totalImpressions, clicks: gscData.totalClicks, avgPosition: gscData.avgPosition, topQueries: gscData.topQueries },
+            };
+
+            const prompt = `Bạn là chuyên gia phân tích SEO cho website keolaigiamhom.vn (vườn ươm keo lai giâm hom tại Việt Nam). Đọc số liệu dưới đây và đưa ra phân tích + đề xuất hành động cụ thể.
+
+DỮ LIỆU THỰC TẾ:
+- Tổng bài viết: ${summary.articles.total}
+- Bài viết mới 7 ngày qua: ${summary.articles.thisWeek}
+- Tổng topic: ${summary.topics.total} (${summary.topics.pending} đang chờ, ${summary.topics.error} lỗi, ${summary.topics.published} đã đăng)
+- GSC 30 ngày: ${gscData.totalImpressions.toLocaleString('vi-VN')} impressions, ${gscData.totalClicks.toLocaleString('vi-VN')} clicks, vị trí trung bình ${gscData.avgPosition}
+- Top queries: ${(gscData.topQueries || []).join(', ')}
+
+${summary.articles.recent.length > 0 ? 'Bài viết gần đây:\n' + summary.articles.recent.map(a => `- ${a.title} (${a.publishedAt})`).join('\n') : ''}
+
+${pendingTopics.length <= 3 ? 'CẢNH BÁO: Topic sắp hết — cần replenish gấp.' : ''}
+${errorTopics.length > 0 ? 'CẢNH BÁO: Có ' + errorTopics.length + ' topic bị lỗi — cần reset hoặc sửa prompt.' : ''}
+
+Yêu cầu trả lời bằng tiếng Việt, format rõ ràng:
+1. TÓM TẮT — 2-3 câu đánh giá tổng quan
+2. VẤN ĐỀ — liệt kê các vấn đề cần chú ý (nếu có)
+3. ĐỀ XUẤT — 3-5 hành động cụ thể nên làm tiếp theo, ưu tiên theo thứ tự`;
+
+            const deepseekKey = deepseekApiKey.value();
+            const dsRes = await fetch('https://api.deepseek.com/v1/chat/completions', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${deepseekKey}` },
+              body: JSON.stringify({
+                model: 'deepseek-chat',
+                messages: [{ role: 'user', content: prompt }],
+                temperature: 0.3,
+                max_tokens: 1500,
+              }),
+            });
+
+            if (!dsRes.ok) {
+              const errText = await dsRes.text();
+              return res.status(200).json({ analysis: 'Không thể kết nối DeepSeek: ' + errText.slice(0, 200), summary });
+            }
+
+            const dsData = await dsRes.json();
+            const analysis = dsData.choices?.[0]?.message?.content || 'DeepSeek không trả về phân tích.';
+
+            return res.status(200).json({ analysis, summary });
           }
 
           case 'workflow': {

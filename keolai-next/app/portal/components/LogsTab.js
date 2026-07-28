@@ -45,7 +45,28 @@ export default function LogsTab({ data }) {
     </div>
   )
 
+  const [aiLoading, setAiLoading] = useState(false)
+  const [aiAnalysis, setAiAnalysis] = useState(null)
+
   const { timeline = [], counts, gsc } = data
+
+  async function fetchAnalysis() {
+    setAiLoading(true)
+    try {
+      const secret = sessionStorage.getItem('keolai_portal_secret') || ''
+      const res = await fetch(`https://us-central1-keolai-63ec1.cloudfunctions.net/portalData?section=analysis`, {
+        headers: { 'x-app-secret': secret },
+      })
+      if (res.ok) {
+        const d = await res.json()
+        setAiAnalysis(d)
+      }
+    } catch (e) {
+      setAiAnalysis({ analysis: 'Lỗi kết nối: ' + e.message })
+    } finally {
+      setAiLoading(false)
+    }
+  }
 
   // Filter
   const filtered = useMemo(() => {
@@ -85,6 +106,38 @@ export default function LogsTab({ data }) {
         <KpiCard icon={<IconTrend size={20} />} label="Tổng bài" value={counts?.articles?.total ?? '—'} color="#787774" />
         <KpiCard icon={<IconX size={20} />} label="Topic lỗi" value={counts?.topics?.error ?? '—'}
           color={counts?.topics?.error > 0 ? '#9F2F2D' : '#2C6B4F'} />
+      </div>
+
+      {/* AI Analysis */}
+      <div style={{ marginBottom: 20 }}>
+        {!aiAnalysis && (
+          <button className="btn btn-primary" onClick={fetchAnalysis} disabled={aiLoading}>
+            <IconRobot size={16} /> {aiLoading ? 'Đang phân tích...' : 'AI Phân Tích & Đề Xuất (DeepSeek)'}
+          </button>
+        )}
+        {aiAnalysis && (
+          <div className="card">
+            <div className="card-header">
+              <span className="card-title"><IconRobot size={16} /> AI Phân Tích — DeepSeek</span>
+              <button className="btn btn-ghost btn-sm" onClick={fetchAnalysis} disabled={aiLoading}>
+                {aiLoading ? '⏳' : '🔄'} Làm mới
+              </button>
+            </div>
+            <div className="card-body">
+              <div style={{
+                fontSize: 13, lineHeight: 1.8, color: 'var(--p-text-2)',
+                whiteSpace: 'pre-line',
+              }}>
+                {aiAnalysis.analysis}
+              </div>
+              {aiAnalysis.summary && (
+                <div style={{ marginTop: 14, padding: '10px 0', borderTop: '1px solid var(--p-border)', display: 'flex', gap: 16, fontSize: 11, color: 'var(--p-text-muted)' }}>
+                  <span>Dựa trên: {aiAnalysis.summary.articles?.total} bài · {aiAnalysis.summary.topics?.total} topic · {aiAnalysis.summary.gsc?.impressions?.toLocaleString('vi-VN')} GSC impressions</span>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Filter bar */}
