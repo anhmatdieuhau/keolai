@@ -31,6 +31,86 @@ function parseError(raw) {
   } catch { return raw.slice(0, 120) }
 }
 
+// Simple markdown → styled HTML for AI analysis rendering
+function mdToHtml(text) {
+  if (!text) return ''
+  const lines = text.split('\n')
+  let html = ''
+  let inList = false
+  let listType = ''
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i]
+
+    // Horizontal rule
+    if (/^---+$/.test(line.trim())) { html += '<hr style="border:none;border-top:1px solid var(--p-border);margin:18px 0">'; inList = false; continue }
+
+    // h2
+    const h2 = line.match(/^## (.+)/)
+    if (h2) {
+      if (inList) { html += '</' + listType + '>'; inList = false }
+      html += '<h2 style="font-size:16px;font-weight:800;color:var(--p-text);margin:20px 0 8px;letter-spacing:-0.01em">' + inlineMarkdown(h2[1]) + '</h2>'
+      continue
+    }
+    // h3
+    const h3 = line.match(/^### (.+)/)
+    if (h3) {
+      if (inList) { html += '</' + listType + '>'; inList = false }
+      html += '<h3 style="font-size:14px;font-weight:700;color:var(--p-text);margin:14px 0 6px">' + inlineMarkdown(h3[1]) + '</h3>'
+      continue
+    }
+
+    // Numbered list
+    const ol = line.match(/^(\d+)\. (.+)/)
+    if (ol) {
+      if (!inList || listType !== 'ol') {
+        if (inList) html += '</' + listType + '>'
+        html += '<ol style="margin:6px 0;padding-left:20px">'
+        inList = true; listType = 'ol'
+      }
+      html += '<li style="margin-bottom:4px;line-height:1.7">' + inlineMarkdown(ol[2]) + '</li>'
+      continue
+    }
+    // Bullet list
+    const ul = line.match(/^- (.+)/)
+    if (ul) {
+      if (!inList || listType !== 'ul') {
+        if (inList) html += '</' + listType + '>'
+        html += '<ul style="margin:6px 0;padding-left:18px">'
+        inList = true; listType = 'ul'
+      }
+      html += '<li style="margin-bottom:4px;line-height:1.7">' + inlineMarkdown(ul[1]) + '</li>'
+      continue
+    }
+
+    // Close list if not a list item
+    if (inList && line.trim()) { html += '</' + listType + '>'; inList = false }
+
+    // Indented sub-item (skip wrapping in p)
+    const sub = line.match(/^  - (.+)/)
+    if (sub) {
+      html += '<div style="margin-left:20px;margin-bottom:4px;line-height:1.7">' + inlineMarkdown(sub[1]) + '</div>'
+      continue
+    }
+
+    // Normal paragraph
+    if (line.trim()) {
+      html += '<p style="margin:0 0 8px;line-height:1.8">' + inlineMarkdown(line) + '</p>'
+    } else {
+      if (inList) { html += '</' + listType + '>'; inList = false }
+    }
+  }
+  if (inList) html += '</' + listType + '>'
+  return html
+}
+
+function inlineMarkdown(text) {
+  return text
+    .replace(/\*\*(.+?)\*\*/g, '<strong style="color:var(--p-text);font-weight:700">$1</strong>')
+    .replace(/\*(.+?)\*/g, '<em>$1</em>')
+    .replace(/`(.+?)`/g, '<code style="background:var(--p-surface-3);padding:1px 5px;border-radius:3px;font-family:var(--p-mono);font-size:0.9em">$1</code>')
+}
+
 // ═══════════════════════════════════════════════════════════
 export default function LogsTab({ data }) {
   const [filter, setFilter] = useState('all') // all | topic | article | report | error
@@ -124,12 +204,9 @@ export default function LogsTab({ data }) {
               </button>
             </div>
             <div className="card-body">
-              <div style={{
-                fontSize: 13, lineHeight: 1.8, color: 'var(--p-text-2)',
-                whiteSpace: 'pre-line',
-              }}>
-                {aiAnalysis.analysis}
-              </div>
+              <div style={{ fontSize: 13.5, lineHeight: 1.7, color: 'var(--p-text-2)' }}
+                dangerouslySetInnerHTML={{ __html: mdToHtml(aiAnalysis.analysis) }}
+              />
               {aiAnalysis.summary && (
                 <div style={{ marginTop: 14, padding: '10px 0', borderTop: '1px solid var(--p-border)', display: 'flex', gap: 16, fontSize: 11, color: 'var(--p-text-muted)' }}>
                   <span>Dựa trên: {aiAnalysis.summary.articles?.total} bài · {aiAnalysis.summary.topics?.total} topic · {aiAnalysis.summary.gsc?.impressions?.toLocaleString('vi-VN')} GSC impressions</span>

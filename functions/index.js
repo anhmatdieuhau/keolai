@@ -4091,7 +4091,12 @@ exports.portalData = functions.https.onRequest(
               gsc: { impressions: gscData.totalImpressions, clicks: gscData.totalClicks, avgPosition: gscData.avgPosition, topQueries: gscData.topQueries },
             };
 
-            const prompt = `Bạn là chuyên gia phân tích SEO cho website keolaigiamhom.vn (vườn ươm keo lai giâm hom tại Việt Nam). Đọc số liệu dưới đây và đưa ra phân tích + đề xuất hành động cụ thể.
+            const prompt = `Bạn là CEO kiêm Product Manager của keolaigiamhom.vn — một vườn ươm keo lai giâm hom tại Việt Nam, vận hành content website như một kênh bán hàng và tạo khách hàng tiềm năng (leads). Bạn KHÔNG phải SEO specialist — bạn là người chịu trách nhiệm về TĂNG TRƯỞNG, DOANH THU, và CHIẾN LƯỢC SẢN PHẨM.
+
+Suy nghĩ ở 3 cấp độ:
+- CEO: thị trường đang đi đâu? đối thủ đang làm gì? cơ hội lớn nhất 6-12 tháng tới là gì? làm sao để website này thành doanh nghiệp thật, không phải blog?
+- Product Manager: khách hàng cần gì? trải nghiệm của họ ra sao? sản phẩm nội dung nào thực sự chuyển đổi? nên build gì tiếp theo?
+- Growth: traffic đang tăng hay giảm? kênh nào hiệu quả nhất? làm sao để tăng trưởng kép (compounding growth)?
 
 DỮ LIỆU THỰC TẾ:
 - Tổng bài viết: ${summary.articles.total}
@@ -4105,10 +4110,19 @@ ${summary.articles.recent.length > 0 ? 'Bài viết gần đây:\n' + summary.ar
 ${pendingTopics.length <= 3 ? 'CẢNH BÁO: Topic sắp hết — cần replenish gấp.' : ''}
 ${errorTopics.length > 0 ? 'CẢNH BÁO: Có ' + errorTopics.length + ' topic bị lỗi — cần reset hoặc sửa prompt.' : ''}
 
-Yêu cầu trả lời bằng tiếng Việt, format rõ ràng:
-1. TÓM TẮT — 2-3 câu đánh giá tổng quan
-2. VẤN ĐỀ — liệt kê các vấn đề cần chú ý (nếu có)
-3. ĐỀ XUẤT — 3-5 hành động cụ thể nên làm tiếp theo, ưu tiên theo thứ tự`;
+Trả lời bằng tiếng Việt, giọng quyết đoán, không dài dòng. Format:
+
+## TẦM NHÌN & CHIẾN LƯỢC
+2-3 câu: bức tranh lớn. Website này đang ở đâu trong thị trường? Cơ hội lớn nhất 6-12 tháng tới là gì? Đối thủ đang làm gì mà mình chưa làm?
+
+## SỨC KHOẺ SẢN PHẨM
+Đánh giá ngắn gọn: content machine đang khoẻ hay yếu? Pipeline có bền vững không? Điểm nghẽn lớn nhất là gì?
+
+## CƠ HỘI TĂNG TRƯỞNG
+2-3 cơ hội cụ thể, có số liệu. Không phải "cải thiện SEO" — mà là "có thể chiếm vị trí #1 cho nhóm từ khoá X với lượng search Y/tháng". Hoặc "có thể tạo landing page bán giống trực tiếp từ traffic hiện có".
+
+## HÀNH ĐỘNG TUẦN NÀY
+3-5 việc CỤ THỂ, làm được trong 7 ngày, ưu tiên theo impact. Mỗi việc: làm gì → kỳ vọng kết quả gì. Không lý thuyết.`;
 
             const deepseekKey = deepseekApiKey.value();
             const dsRes = await fetch('https://api.deepseek.com/v1/chat/completions', {
@@ -4118,7 +4132,7 @@ Yêu cầu trả lời bằng tiếng Việt, format rõ ràng:
                 model: 'deepseek-chat',
                 messages: [{ role: 'user', content: prompt }],
                 temperature: 0.3,
-                max_tokens: 1500,
+                max_tokens: 2500,
               }),
             });
 
