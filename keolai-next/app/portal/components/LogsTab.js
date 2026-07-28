@@ -154,31 +154,47 @@ export default function LogsTab({ data }) {
               {gsc.indexed < gsc.totalTracked ? ` Còn ${gsc.totalTracked - gsc.indexed} bài chưa được index.` : ''}
             </div>
 
-            {/* Top articles table */}
-            {gsc.topArticles.length > 0 && (
-              <div className="table-wrap" style={{ marginTop: 14 }}>
-                <table className="portal-table">
-                  <thead>
-                    <tr>
-                      <th>Bài viết</th>
-                      <th>Position</th>
-                      <th>Impressions</th>
-                      <th>Clicks</th>
-                      <th>CTR</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {gsc.topArticles.map(a => (
-                      <tr key={a.slug}>
-                        <td style={{ maxWidth: 280 }}><a href={a.articleUrl || '#'} target="_blank" rel="noopener noreferrer" className="td-link truncate" style={{ display: 'block' }}>{a.slug}</a></td>
-                        <td className="mono">{a.position != null ? `#${a.position}` : '—'}</td>
-                        <td className="mono">{a.impressions?.toLocaleString('vi-VN') || '—'}</td>
-                        <td className="mono">{a.clicks?.toLocaleString('vi-VN') || '—'}</td>
-                        <td className="mono">{a.ctr != null ? `${a.ctr}%` : '—'}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            {/* Top articles + Top queries side by side */}
+            {(gsc.topArticles.length > 0 || gsc.topQueries?.length > 0) && (
+              <div className="dashboard-grid-2" style={{ marginTop: 14 }}>
+                {gsc.topArticles.length > 0 && (
+                  <div className="table-wrap">
+                    <table className="portal-table">
+                      <thead><tr><th colSpan={5} style={{ fontSize: 11, fontWeight: 700 }}>Top Bài Viết</th></tr>
+                        <tr><th>Bài viết</th><th>Pos</th><th>Impr</th><th>Clicks</th><th>CTR</th></tr></thead>
+                      <tbody>
+                        {gsc.topArticles.slice(0, 10).map(a => (
+                          <tr key={a.slug}>
+                            <td style={{ maxWidth: 160 }}><a href={a.articleUrl || '#'} target="_blank" rel="noopener noreferrer" className="td-link truncate" style={{ display: 'block' }}>{a.slug}</a></td>
+                            <td className="mono">{a.position != null ? `#${a.position}` : '—'}</td>
+                            <td className="mono">{a.impressions?.toLocaleString('vi-VN') || '—'}</td>
+                            <td className="mono">{a.clicks?.toLocaleString('vi-VN') || '—'}</td>
+                            <td className="mono">{a.ctr != null ? `${a.ctr}%` : '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+                {gsc.topQueries?.length > 0 && (
+                  <div className="table-wrap">
+                    <table className="portal-table">
+                      <thead><tr><th colSpan={5} style={{ fontSize: 11, fontWeight: 700 }}>Top Từ Khoá GSC</th></tr>
+                        <tr><th>Query</th><th>Pos</th><th>Impr</th><th>Clicks</th><th>CTR</th></tr></thead>
+                      <tbody>
+                        {gsc.topQueries.slice(0, 15).map((q, i) => (
+                          <tr key={i}>
+                            <td style={{ maxWidth: 200 }} className="truncate">{q.query}</td>
+                            <td className="mono">{q.position != null ? `#${q.position}` : '—'}</td>
+                            <td className="mono">{q.impressions?.toLocaleString('vi-VN') || '—'}</td>
+                            <td className="mono">{q.clicks?.toLocaleString('vi-VN') || '—'}</td>
+                            <td className="mono">{q.ctr != null ? `${q.ctr}%` : '—'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             )}
           </div>

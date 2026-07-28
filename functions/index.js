@@ -3923,43 +3923,103 @@ exports.portalData = functions.https.onRequest(
             const allTopics = topicsSnap.docs.map(d => d.data());
             const activeArticles = articlesSnap.docs.filter(d => !d.data().retired && !d.data().redirectTo);
 
-            // GSC performance — from brain_experiments C2 rank data
-            const experimentsSnap = await db.collection('brain_experiments').get();
-            const gscArticles = experimentsSnap.docs
-              .map(d => {
-                const data = d.data();
-                const c2 = data.c2 || {};
-                return {
-                  slug: d.id,
-                  articleUrl: data.articleUrl,
-                  position: c2.position,
-                  impressions: c2.impressions,
-                  clicks: c2.clicks,
-                  ctr: c2.ctr,
-                  hasData: c2.hasData || (c2.impressions > 0),
-                  indexed: data.c1?.indexed,
-                  status: data.status,
-                };
-              })
-              .filter(a => a.hasData)
-              .sort((a, b) => (b.impressions || 0) - (a.impressions || 0));
-
-            const gscSummary = {
-              totalTracked: experimentsSnap.size,
-              withRankData: gscArticles.length,
-              indexed: experimentsSnap.docs.filter(d => d.data().c1?.indexed).length,
-              top10: gscArticles.filter(a => a.position && a.position <= 10).length,
-              top3: gscArticles.filter(a => a.position && a.position <= 3).length,
-              totalImpressions: gscArticles.reduce((s, a) => s + (a.impressions || 0), 0),
-              totalClicks: gscArticles.reduce((s, a) => s + (a.clicks || 0), 0),
-              avgCtr: gscArticles.length > 0
-                ? (gscArticles.reduce((s, a) => s + (a.ctr || 0), 0) / gscArticles.length).toFixed(2)
-                : '0',
-              avgPosition: gscArticles.length > 0
-                ? (gscArticles.reduce((s, a) => s + (a.position || 0), 0) / gscArticles.length).toFixed(1)
-                : '—',
-              topArticles: gscArticles.slice(0, 15),
+            // GSC performance — live query from Google Search Console API
+            let gscSummary = {
+              totalTracked: 0, withRankData: 0, indexed: 0,
+              top10: 0, top3: 0, totalImpressions: 0, totalClicks: 0,
+              avgCtr: '0', avgPosition: '—', topArticles: [], topQueries: [],
             };
+            try {
+              const { GoogleAuth } = require('google-auth-library');
+              const gscAuth = new GoogleAuth({ scopes: ['https://www.googleapis.com/auth/webmasters.readonly'] });
+              const gscClient = await gscAuth.getClient();
+              const searchconsole = google.searchconsole({ version: 'v1', auth: gscClient });
+
+              // Site-level aggregate query — last 30 days
+              const gscRes = await searchconsole.searchanalytics.query({
+                siteUrl: GSC_SITE_URL,
+                requestBody: {
+                  startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+                  endDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+                  dimensions: ['query'],
+                  rowLimit: 50,
+                },
+              });
+              const gscRows = gscRes.data.rows || [];
+              const totalImpressions = gscRows.reduce((s, r) => s + r.impressions, 0);
+              const totalClicks = gscRows.reduce((s, r) => s + r.clicks, 0);
+              const avgPosition = gscRows.length > 0
+                ? (gscRows.reduce((s, r) => s + r.position * r.impressions, 0) / totalImpressions).toFixed(1)
+                : '—';
+
+              // Per-page query for top articles
+              const pageRes = await searchconsole.searchanalytics.query({
+                siteUrl: GSC_SITE_URL,
+                requestBody: {
+                  startDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+                  endDate: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
+                  dimensions: ['page'],
+                  rowLimit: 20,
+                },
+              });
+              const pageRows = (pageRes.data.rows || [])
+                .filter(r => r.keys[0].includes('/articles/'))
+                .sort((a, b) => b.impressions - a.impressions);
+
+              const topArticles = pageRows.map(r => ({
+                slug: (r.keys[0].match(/\/articles\/([^/]+)/) || ['', r.keys[0]])[1],
+                articleUrl: 'https://keolaigiamhom.vn' + r.keys[0],
+                position: Math.round(r.position * 10) / 10,
+                impressions: r.impressions,
+                clicks: r.clicks,
+                ctr: Math.round(r.ctr * 10000) / 100,
+              }));
+
+              // Top queries
+              const topQueries = gscRows
+                .sort((a, b) => b.impressions - a.impressions)
+                .slice(0, 20)
+                .map(r => ({
+                  query: r.keys[0],
+                  position: Math.round(r.position * 10) / 10,
+                  impressions: r.impressions,
+                  clicks: r.clicks,
+                  ctr: Math.round(r.ctr * 10000) / 100,
+                }));
+
+              gscSummary = {
+                totalTracked: pageRows.length,
+                withRankData: pageRows.length,
+                indexed: pageRows.length,  // if it has impressions, it's indexed
+                top10: pageRows.filter(a => a.position <= 10).length,
+                top3: pageRows.filter(a => a.position <= 3).length,
+                totalImpressions,
+                totalClicks,
+                avgCtr: totalImpressions > 0 ? ((totalClicks / totalImpressions) * 100).toFixed(2) : '0',
+                avgPosition,
+                topArticles,
+                topQueries,
+              };
+            } catch (gscErr) {
+              console.warn('⚠️ GSC live query failed, falling back to brain_experiments:', gscErr.message);
+              // Fallback: brain_experiments C2 data
+              const experimentsSnap = await db.collection('brain_experiments').get();
+              const gscArticles = experimentsSnap.docs
+                .map(d => { const data = d.data(); const c2 = data.c2 || {}; return { slug: d.id, articleUrl: data.articleUrl, position: c2.position, impressions: c2.impressions, clicks: c2.clicks, ctr: c2.ctr, hasData: c2.hasData || (c2.impressions > 0), indexed: data.c1?.indexed, status: data.status }; })
+                .filter(a => a.hasData)
+                .sort((a, b) => (b.impressions || 0) - (a.impressions || 0));
+              gscSummary = {
+                totalTracked: experimentsSnap.size, withRankData: gscArticles.length,
+                indexed: experimentsSnap.docs.filter(d => d.data().c1?.indexed).length,
+                top10: gscArticles.filter(a => a.position && a.position <= 10).length,
+                top3: gscArticles.filter(a => a.position && a.position <= 3).length,
+                totalImpressions: gscArticles.reduce((s, a) => s + (a.impressions || 0), 0),
+                totalClicks: gscArticles.reduce((s, a) => s + (a.clicks || 0), 0),
+                avgCtr: gscArticles.length > 0 ? (gscArticles.reduce((s, a) => s + (a.ctr || 0), 0) / gscArticles.length).toFixed(2) : '0',
+                avgPosition: gscArticles.length > 0 ? (gscArticles.reduce((s, a) => s + (a.position || 0), 0) / gscArticles.length).toFixed(1) : '—',
+                topArticles: gscArticles.slice(0, 15), topQueries: [],
+              };
+            }
 
             return res.status(200).json({
               timeline: timeline.slice(0, 100),
