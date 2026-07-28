@@ -24,6 +24,7 @@ const gmailAppPassword = defineSecret('GMAIL_APP_PASSWORD');
 
 const { normalizeSlug, isValidSlug } = require('./lib/slug');
 const { evaluateTopicNovelty, registerTopicFingerprint } = require('./lib/topic-dedup');
+const { nodes: WORKFLOW_NODES, edges: WORKFLOW_EDGES, GRAPH_VERSION } = require('./lib/workflowGraph');
 const { embedTopicTitle } = require('./lib/embeddings');
 const { buildNurtureEmail, buildReengagementEmail } = require('./lib/nurtureTemplates');
 const costGuard = require('./marketing/lib/costGuard');
@@ -3848,6 +3849,58 @@ exports.portalData = functions.https.onRequest(
               months,
               limitUsd: 1.85,
               rates: RATES,
+            });
+          }
+
+          case 'workflow': {
+            // Budget via costGuard (import, don't copy the rate table a third time)
+            const budget = await costGuard.checkBudget(db);
+            const spentUsd = Math.round(budget.spentUsd * 10000) / 10000;
+            const rates = costGuard.MODEL_RATES_PER_1M_TOKENS_USD;
+
+            // Recent runs — last 20, newest first
+            const runsSnap = await db.collection('workflow_runs')
+              .orderBy('startedAt', 'desc')
+              .limit(20)
+              .get();
+            const recentRuns = runsSnap.docs.map(d => {
+              const r = d.data();
+              return {
+                runId: d.id,
+                nodeId: r.nodeId,
+                functionName: r.functionName,
+                status: r.status,
+                triggeredBy: r.triggeredBy,
+                source: r.source,
+                startedAt: safeDate(r.startedAt),
+                finishedAt: safeDate(r.finishedAt),
+                durationMs: r.durationMs,
+                httpStatus: r.httpStatus,
+                budgetBefore: r.budgetBefore,
+                budgetAfter: r.budgetAfter,
+              };
+            });
+
+            // Pipeline health: pending topics, briefs awaiting review
+            const [pendingTopicsSnap] = await Promise.all([
+              db.collection('topics').where('status', '==', 'pending').select().get(),
+            ]);
+
+            return res.status(200).json({
+              graph: {
+                version: GRAPH_VERSION,
+                nodes: WORKFLOW_NODES,
+                edges: WORKFLOW_EDGES,
+              },
+              budget: {
+                spentUsd,
+                limitUsd: budget.limitUsd,
+                rates,
+              },
+              recentRuns,
+              pipelineCounts: {
+                pendingTopics: pendingTopicsSnap.size,
+              },
             });
           }
 
