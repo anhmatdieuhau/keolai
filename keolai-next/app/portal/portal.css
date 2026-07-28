@@ -301,7 +301,13 @@
 
 /* ── Progress Bar ─────────────────────────────────────── */
 .progress-bar-wrap { height: 6px; background: var(--p-surface-3); border-radius: 3px; overflow: hidden; }
-.progress-bar-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; background: var(--p-accent); }
+.progress-bar-fill {
+  height: 100%; width: 100%;
+  border-radius: 3px;
+  transform-origin: left center;
+  transition: transform 0.4s ease;
+  background: var(--p-accent);
+}
 .progress-bar-fill.warning { background: var(--p-warning); }
 .progress-bar-fill.danger { background: var(--p-danger); }
 

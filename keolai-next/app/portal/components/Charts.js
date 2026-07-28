@@ -208,7 +208,7 @@ export function ProgressMeter({ value, max, label, showPct = true }) {
         {showPct && <span className="cost-meter-amount">{pct.toFixed(1)}%</span>}
       </div>
       <div className="progress-bar-wrap">
-        <div className={`progress-bar-fill ${cls}`} style={{ width: `${pct}%` }} />
+        <div className={`progress-bar-fill ${cls}`} style={{ transform: `scaleX(${pct / 100})` }} />
       </div>
     </div>
   )
