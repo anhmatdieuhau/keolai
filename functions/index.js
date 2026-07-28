@@ -4129,7 +4129,7 @@ Trả lời bằng tiếng Việt, giọng quyết đoán, không dài dòng. Fo
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + deepseekKey },
               body: JSON.stringify({
-                model: 'deepseek-chat',
+                model: 'deepseek-chat',  // deepseek-v4-pro via /chat/completions
                 messages: [{ role: 'user', content: prompt }],
                 temperature: 0.3,
                 max_tokens: 2500,
